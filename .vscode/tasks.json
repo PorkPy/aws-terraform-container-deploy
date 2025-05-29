@@ -2,72 +2,193 @@
     "version": "2.0.0",
     "tasks": [
         {
+            // Basic AWS S3 bucket listing task
+            // Use this to quickly check which S3 buckets exist in your account
             "label": "AWS: List S3 Buckets",
             "type": "shell",
             "command": "aws s3 ls",
             "problemMatcher": [],
             "presentation": {
                 "reveal": "always",
-                "panel": "new"
+                "panel": "new",
+                "clear": true
             },
             "group": "aws"
         },
         {
+            // Main deployment task that runs the deployment script
+            // This is your one-click solution to deploy the entire infrastructure
             "label": "AWS: Deploy Transformer Model",
             "type": "shell",
             "command": "./scripts/deploy.sh",
             "problemMatcher": [],
             "presentation": {
                 "reveal": "always",
-                "panel": "dedicated"
+                "panel": "dedicated",
+                "clear": true
             },
+            // Making this the default build task allows you to run it with Ctrl+Shift+B
             "group": {
                 "kind": "build",
                 "isDefault": true
             }
         },
         {
+            // Terraform validation task
+            // Use this before deployment to check if your Terraform files are valid
+            "label": "AWS: Validate Terraform",
+            "type": "shell",
+            "command": "cd terraform && terraform validate",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "new",
+                "clear": true
+            },
+            "group": "aws"
+        },
+        {
+            // Terraform plan task
+            // This shows what changes will be made without actually applying them
+            "label": "AWS: Terraform Plan",
+            "type": "shell",
+            "command": "cd terraform && terraform plan",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": true
+            },
+            "group": "aws"
+        },
+        {
+            // Terraform apply task
+            // This applies your infrastructure changes defined in Terraform
+            "label": "AWS: Terraform Apply",
+            "type": "shell",
+            "command": "cd terraform && terraform apply -auto-approve",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": true
+            },
+            "group": "aws"
+        },
+        {
+            // Infrastructure destruction task
+            // CAUTION: This removes all resources created by Terraform
             "label": "AWS: Destroy Infrastructure",
             "type": "shell",
             "command": "cd terraform && terraform destroy -auto-approve",
             "problemMatcher": [],
             "presentation": {
                 "reveal": "always",
-                "panel": "new"
+                "panel": "new",
+                "clear": true
             },
             "group": "aws"
         },
         {
+            // S3 model upload task
+            // Use this to upload your model files to an existing S3 bucket
+            // Will prompt for the bucket name
             "label": "AWS: Upload Model to S3",
             "type": "shell",
             "command": "aws s3 cp src/model/transformer_model.pt s3://${input:bucketName}/model/ && aws s3 cp src/model/tokenizer.json s3://${input:bucketName}/model/",
             "problemMatcher": [],
             "presentation": {
                 "reveal": "always",
-                "panel": "new"
+                "panel": "new",
+                "clear": true
             },
             "group": "aws"
         },
         {
+            // Lambda function logs checker
+            // Helps you debug issues with your Lambda functions
+            // Will prompt for the Lambda function name
             "label": "AWS: Check Lambda Logs",
             "type": "shell",
-            "command": "aws logs filter-log-events --log-group-name '/aws/lambda/${input:lambdaName}' --limit 10",
+            "command": "aws logs filter-log-events --log-group-name '/aws/lambda/${input:lambdaName}' --limit 20",
             "problemMatcher": [],
             "presentation": {
                 "reveal": "always",
-                "panel": "new"
+                "panel": "dedicated",
+                "clear": true
+            },
+            "group": "aws"
+        },
+        {
+            // API Gateway endpoint retrieval
+            // Gets the URL of your deployed API from Terraform outputs
+            "label": "AWS: Get API Endpoint",
+            "type": "shell",
+            "command": "cd terraform && terraform output -raw api_endpoint",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "new",
+                "clear": true
+            },
+            "group": "aws"
+        },
+        {
+            // Lambda function invocation test
+            // Tests your Lambda function directly with sample input
+            // Will prompt for the Lambda function name
+            "label": "AWS: Test Lambda Function",
+            "type": "shell",
+            "command": "aws lambda invoke --function-name ${input:lambdaName} --payload '{\"body\": \"{\\\"prompt\\\": \\\"Once upon a time\\\", \\\"temperature\\\": 1.0, \\\"max_tokens\\\": 50}\"}' --cli-binary-format raw-in-base64-out response.json && cat response.json",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": true
+            },
+            "group": "aws"
+        },
+        {
+            // Package Lambda functions
+            // Creates ZIP files for your Lambda functions with all dependencies
+            "label": "AWS: Package Lambda Functions",
+            "type": "shell",
+            "command": "mkdir -p dist && cd src/lambda_functions/generate_text && pip install -r requirements.txt -t . && zip -r ../../../dist/generate_text.zip . && cd ../../lambda_functions/visualize_attention && pip install -r requirements.txt -t . && zip -r ../../../dist/visualize_attention.zip .",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": true
+            },
+            "group": "aws"
+        },
+        {
+            // Cost estimation task
+            // Shows estimated costs for your AWS resources
+            "label": "AWS: Estimate Costs",
+            "type": "shell",
+            "command": "cd terraform && terraform plan -out=tfplan && terraform show -json tfplan | jq -r '.planned_values.root_module.resources[] | \"Resource: \" + .address + \" - Type: \" + .type'",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": true
             },
             "group": "aws"
         }
     ],
     "inputs": [
         {
+            // Input for S3 bucket name
+            // This creates an interactive prompt when needed
             "id": "bucketName",
             "description": "S3 Bucket Name",
             "default": "transformer-model-artifacts",
             "type": "promptString"
         },
         {
+            // Input for Lambda function name
+            // This creates an interactive prompt when needed
             "id": "lambdaName",
             "description": "Lambda Function Name",
             "default": "transformer-model-generate-text",
