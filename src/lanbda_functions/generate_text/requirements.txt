@@ -1,0 +1,3 @@
+# src/lambda_functions/generate_text/requirements.txt
+torch==1.13.1
+boto3==1.26.89
