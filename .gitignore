@@ -7,3 +7,32 @@
 
 # Lambda packages
 dist/
+
+# Ignore Python package installs in Lambda function folders
+src/lambda_functions/**/__pycache__/
+src/lambda_functions/**/*.pyc
+src/lambda_functions/**/*.pyo
+src/lambda_functions/**/*.dist-info/
+src/lambda_functions/**/build/
+src/lambda_functions/**/dist/
+src/lambda_functions/**/*.egg-info/
+src/lambda_functions/**/function.zip
+src/lambda_functions/**/matplotlib/
+src/lambda_functions/**/numpy/
+src/lambda_functions/**/PIL/
+src/lambda_functions/**/pkg_resources/
+src/lambda_functions/**/setuptools/
+src/lambda_functions/**/bin/
+src/lambda_functions/**/lib/
+src/lambda_functions/**/share/
+src/lambda_functions/**/*.so
+src/lambda_functions/**/*.dll
+src/lambda_functions/**/*.pyd
+
+# Catch all for pip installed packages inside Lambda function folders
+src/lambda_functions/**/requests/
+src/lambda_functions/**/boto3/
+src/lambda_functions/**/botocore/
+src/lambda_functions/**/dateutil/
+src/lambda_functions/**/s3transfer/
+src/lambda_functions/**/urllib3/
