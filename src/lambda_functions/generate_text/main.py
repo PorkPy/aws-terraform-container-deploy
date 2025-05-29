@@ -1,4 +1,3 @@
-# src/lambda_functions/generate_text/main.py
 import json
 import os
 import boto3
@@ -6,8 +5,8 @@ import torch
 import tempfile
 import sys
 
-# Add the current directory to the path for imports
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Add current directory to path for imports
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # Import your model and tokenizer classes
 from transformer import SimpleTransformer
@@ -21,7 +20,7 @@ MODEL_BUCKET = os.environ['MODEL_BUCKET']
 MODEL_KEY = os.environ['MODEL_KEY']
 TOKENIZER_KEY = os.environ['TOKENIZER_KEY']
 
-# Create global variables for model and tokenizer (for reuse across invocations)
+# Create global variables for model and tokenizer
 model = None
 tokenizer = None
 
@@ -33,7 +32,7 @@ def load_model():
     print(f"Loading tokenizer from s3://{MODEL_BUCKET}/{TOKENIZER_KEY}")
     
     # Create temp directory for downloads
-    tmp_dir = "/tmp/model"
+    tmp_dir = "/tmp"
     os.makedirs(tmp_dir, exist_ok=True)
     
     model_path = f"{tmp_dir}/model.pt"
@@ -81,6 +80,7 @@ def lambda_handler(event, context):
         try:
             load_model()
         except Exception as e:
+            print(f"Error loading model: {str(e)}")
             return {
                 'statusCode': 500,
                 'headers': {
@@ -101,8 +101,8 @@ def lambda_handler(event, context):
         top_k = int(body.get('top_k', 50))
         
         print(f"Generating text for prompt: '{prompt}'")
-        print(f"Parameters: temp={temperature}, max_tokens={max_tokens}, top_k={top_k}")
     except Exception as e:
+        print(f"Error parsing request: {str(e)}")
         return {
             'statusCode': 400,
             'headers': {
