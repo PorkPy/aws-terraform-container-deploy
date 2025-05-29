@@ -10,9 +10,9 @@ terraform {
   
   # Optional: Configure backend for state storage
   backend "s3" {
-    bucket = "your-terraform-state-bucket"
+    bucket = "dom-terraform-state-bucket"
     key    = "transformer-model/terraform.tfstate"
-    region = "us-east-1"
+    region = "eu-west-2"  
   }
 }
 
