@@ -79,8 +79,8 @@ resource "aws_lambda_function" "generate_text" {
   timeout       = 30
   memory_size   = 1024
   
-  filename      = "../../dist/generate_text.zip"
-  source_code_hash = filebase64sha256("../../dist/generate_text.zip")
+  filename      = "../dist/generate_text.zip"
+  source_code_hash = filebase64sha256("../dist/generate_text.zip")
   
   environment {
     variables = {
@@ -102,8 +102,8 @@ resource "aws_lambda_function" "visualize_attention" {
   timeout       = 30
   memory_size   = 1024
   
-  filename      = "../../dist/visualize_attention.zip"
-  source_code_hash = filebase64sha256("../../dist/visualize_attention.zip")
+  filename      = "../dist/visualize_attention.zip"
+  source_code_hash = filebase64sha256("../dist/visualize_attention.zip")
   
   environment {
     variables = {
