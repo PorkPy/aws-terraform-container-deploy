@@ -1,6 +1,7 @@
-# Temporary packaging directories
+# Temporary and packaging directories
 temp/
 dist/
+dist_light/
 
 # Python packages and artifacts
 __pycache__/
@@ -19,6 +20,7 @@ lib64/
 parts/
 sdist/
 var/
+wheels/
 *.egg-info/
 .installed.cfg
 *.egg
@@ -30,16 +32,23 @@ s3transfer/
 urllib3/
 jmespath/
 python_dateutil/
+dateutil/
 six.py
 *.dist-info/
 
-# Terraform
-.terraform/
-*.tfstate
-*.tfstate.*
-.terraform.lock.hcl
+# ML-related packages
+numpy/
+matplotlib/
+torch/
+torchvision/
+sklearn/
+scipy/
+pandas/
+PIL/
+Pillow/
 
 # Terraform
+**/.terraform/*
 .terraform/
 *.tfstate
 *.tfstate.*
@@ -47,29 +56,6 @@ six.py
 .terraformrc
 terraform.rc
 .terraform.lock.hcl
-
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
 
 # Environment files
 .env
@@ -96,19 +82,8 @@ venv.bak/
 .Trash-*
 .nfs*
 
-# Distribution / packaging
-dist/
-build/
-*.egg-info/
-
 # Logs
 *.log
 
-# Terraform
-**/.terraform/*
-*.tfstate
-*.tfstate.*
-*.tfvars
-.terraformrc
-terraform.rc
-.terraform.lock.hcl
+# Backup files
+*.backup
