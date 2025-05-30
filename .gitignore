@@ -86,4 +86,16 @@ venv.bak/
 *.log
 
 # Backup files
-*.backup
+*.backup# Specific package paths
+src/lambda_functions/visualize_attention/contourpy/
+src/lambda_functions/visualize_attention/PIL/
+src/lambda_functions/visualize_attention/fontTools/
+src/lambda_functions/visualize_attention/cycler/
+src/lambda_functions/visualize_attention/kiwisolver/
+src/lambda_functions/visualize_attention/mpl_toolkits/
+src/lambda_functions/visualize_attention/packaging/
+src/lambda_functions/visualize_attention/pyparsing/
+src/lambda_functions/visualize_attention/*.so
+src/lambda_functions/visualize_attention/*.pyi
+src/lambda_functions/visualize_attention/pylab.py
+src/lambda_functions/generate_text/bin/
