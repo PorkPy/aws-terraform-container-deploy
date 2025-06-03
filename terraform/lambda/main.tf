@@ -18,6 +18,17 @@ variable "common_tags" {
   type        = map(string)
 }
 
+# New variables for ECR repositories
+variable "generate_text_image_uri" {
+  description = "ECR image URI for generate_text function"
+  type        = string
+}
+
+variable "visualize_attention_image_uri" {
+  description = "ECR image URI for visualize_attention function"
+  type        = string
+}
+
 # IAM role for Lambda
 resource "aws_iam_role" "lambda_role" {
   name = "${var.project_name}-lambda-role-${var.resource_suffix}"
@@ -70,17 +81,17 @@ resource "aws_iam_role_policy" "lambda_policy" {
   })
 }
 
-# Lambda function for text generation
+# Lambda function for text generation (Container-based)
 resource "aws_lambda_function" "generate_text" {
   function_name = "${var.project_name}-generate-text-${var.resource_suffix}"
   role          = aws_iam_role.lambda_role.arn
-  handler       = "main.lambda_handler"
-  runtime       = "python3.9"
-  timeout       = 30
-  memory_size   = 1024
   
-  filename      = "../dist/generate_text.zip"
-  source_code_hash = filebase64sha256("../dist/generate_text.zip")
+  # Container configuration
+  package_type = "Image"
+  image_uri    = var.generate_text_image_uri
+  
+  timeout     = 30
+  memory_size = 1024
   
   environment {
     variables = {
@@ -93,17 +104,17 @@ resource "aws_lambda_function" "generate_text" {
   tags = var.common_tags
 }
 
-# Lambda function for attention visualization
+# Lambda function for attention visualization (Container-based)
 resource "aws_lambda_function" "visualize_attention" {
   function_name = "${var.project_name}-visualize-attention-${var.resource_suffix}"
   role          = aws_iam_role.lambda_role.arn
-  handler       = "main.lambda_handler"
-  runtime       = "python3.9"
-  timeout       = 30
-  memory_size   = 1024
   
-  filename      = "../dist/visualize_attention.zip"
-  source_code_hash = filebase64sha256("../dist/visualize_attention.zip")
+  # Container configuration
+  package_type = "Image"
+  image_uri    = var.visualize_attention_image_uri
+  
+  timeout     = 30
+  memory_size = 1024
   
   environment {
     variables = {

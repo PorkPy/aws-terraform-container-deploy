@@ -79,7 +79,7 @@ resource "aws_apigatewayv2_integration" "visualize_integration" {
 resource "aws_lambda_permission" "generate_permission" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
-  function_name = element(split(":", var.generate_lambda_fn), 6)
+  function_name = "transformer-model-generate-text-${var.resource_suffix}"
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.transformer_api.execution_arn}/*/*/generate"
 }
@@ -88,7 +88,7 @@ resource "aws_lambda_permission" "generate_permission" {
 resource "aws_lambda_permission" "visualize_permission" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
-  function_name = element(split(":", var.visualize_lambda_fn), 6)
+  function_name = "transformer-model-visualize-attention-${var.resource_suffix}"
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.transformer_api.execution_arn}/*/*/visualize"
 }

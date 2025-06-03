@@ -47,7 +47,16 @@ module "model_storage" {
   common_tags = local.common_tags
 }
 
-# Create Lambda functions
+# Create ECR repositories for container images
+module "ecr_repositories" {
+  source = "./ecr"
+  
+  project_name    = local.project_name
+  resource_suffix = local.resource_suffix
+  common_tags     = local.common_tags
+}
+
+# Create Lambda functions (container-based)
 module "lambda_functions" {
   source = "./lambda"
   
@@ -55,6 +64,10 @@ module "lambda_functions" {
   resource_suffix = local.resource_suffix
   model_bucket    = module.model_storage.bucket_name
   common_tags     = local.common_tags
+  
+  # Container image URIs (initially using latest tag)
+  generate_text_image_uri       = "${module.ecr_repositories.generate_text_repository_url}:latest"
+  visualize_attention_image_uri = "${module.ecr_repositories.visualize_attention_repository_url}:latest"
 }
 
 # Create API Gateway
