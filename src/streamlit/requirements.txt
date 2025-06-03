@@ -1,0 +1,6 @@
+streamlit
+requests
+pillow
+matplotlib
+pandas
+numpy
