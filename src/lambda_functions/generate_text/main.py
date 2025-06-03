@@ -23,6 +23,7 @@ def lambda_handler(event, context):
         prompt = body.get('prompt', 'Hello, world!')
         max_tokens = int(body.get('max_tokens', 50))
         temperature = float(body.get('temperature', 1.0))
+        top_k = int(body.get('top_k', 50))  # Added top_k parameter
         
         # Get environment variables
         model_bucket = os.environ['MODEL_BUCKET']
@@ -44,11 +45,11 @@ def lambda_handler(event, context):
             # Load tokenizer
             tokenizer = Tokenizer.load(tokenizer_path)
             
-            # Load model - EXACT SAME WAY AS YOUR WORKING STREAMLIT APP
+            # Load model - EXACT SAME WAY AS WORKING GENERATE_TEXT
             print("Loading model...")
-            from model.transformer import SimpleTransformer 
+            from model.transformer import SimpleTransformer
             
-            # Create model with the SAME parameters as your Streamlit app
+            # Create model with the SAME parameters
             model = SimpleTransformer(
                 vocab_size=len(tokenizer.word_to_idx),
                 d_model=256,
@@ -59,7 +60,7 @@ def lambda_handler(event, context):
                 dropout=0.1
             )
             
-            # Load checkpoint - EXACTLY like your Streamlit app
+            # Load checkpoint - EXACTLY like working generate_text
             checkpoint = torch.load(model_path, map_location=torch.device('cpu'))
             model.load_state_dict(checkpoint['model_state_dict'])
             model.eval()
@@ -69,18 +70,19 @@ def lambda_handler(event, context):
             # Tokenize prompt
             input_ids = tokenizer.encode(prompt)
             
-            # Generate text
+            # Generate text with top_k parameter
             print("Generating text...")
             with torch.no_grad():
                 output_ids = model.generate(
-                    prompt=input_ids,  # Changed from input_ids=torch.tensor([input_ids])
+                    prompt=input_ids,
                     max_length=len(input_ids) + max_tokens,
-                    temperature=temperature
+                    temperature=temperature,
+                    top_k=top_k  # Added top_k parameter
                 )
-
-            # Decode output (might need to adjust based on what generate returns)
+            
+            # Decode output
             generated_text = tokenizer.decode(output_ids)
-                
+            
             return {
                 'statusCode': 200,
                 'headers': {
@@ -89,7 +91,12 @@ def lambda_handler(event, context):
                 },
                 'body': json.dumps({
                     'generated_text': generated_text,
-                    'prompt': prompt
+                    'prompt': prompt,
+                    'settings': {
+                        'temperature': temperature,
+                        'max_tokens': max_tokens,
+                        'top_k': top_k
+                    }
                 })
             }
     

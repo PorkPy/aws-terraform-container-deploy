@@ -36,6 +36,8 @@ def main():
                                   help="Higher values produce more diverse text, lower values are more deterministic")
     max_tokens = st.sidebar.slider("Max Tokens", min_value=5, max_value=100, value=20, step=5,
                                  help="Maximum number of tokens to generate")
+    top_k = st.sidebar.slider("Top-k", min_value=1, max_value=100, value=50, step=1,
+                            help="Sample from top k most probable tokens")
     
     # Visualization settings
     st.sidebar.subheader("Visualization Settings")
@@ -66,7 +68,8 @@ def main():
                         json={
                             "prompt": prompt,
                             "temperature": temperature,
-                            "max_tokens": max_tokens
+                            "max_tokens": max_tokens,
+                            "top_k": top_k
                         },
                         headers={"Content-Type": "application/json"}
                     )
@@ -83,10 +86,11 @@ def main():
                             st.json({
                                 "prompt": result.get("prompt", prompt),
                                 "generated_text": result["generated_text"],
-                                "settings": {
+                                "settings": result.get("settings", {
                                     "temperature": temperature,
-                                    "max_tokens": max_tokens
-                                }
+                                    "max_tokens": max_tokens,
+                                    "top_k": top_k
+                                })
                             })
                             
                     else:
