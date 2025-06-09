@@ -33,7 +33,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1
+        aws-region: eu-west-2
     
     - name: Login to Amazon ECR
       id: login-ecr
@@ -60,55 +60,41 @@ jobs:
         cd terraform
         terraform plan
     
-    - name: Build and Push Docker Images
+    - name: Build and Push Docker Images & Update Lambda Functions
       if: github.event.inputs.action == 'deploy' || github.event.inputs.action == '' || github.event_name == 'push'
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        # Get ECR repository names from Terraform state or create them
         cd terraform
         
-        # Apply just the ECR resources first to get repository URLs
-        terraform apply -target=module.ecr -auto-approve || terraform apply -target=aws_ecr_repository.generate_text -target=aws_ecr_repository.visualize_attention -auto-approve
+        # Get repository and function names from Terraform outputs
+        GENERATE_REPO=$(terraform output -raw generate_text_repository_name)
+        VISUALIZE_REPO=$(terraform output -raw visualize_attention_repository_name)
+        GENERATE_FUNCTION=$(terraform output -raw generate_function_name)
+        VISUALIZE_FUNCTION=$(terraform output -raw visualize_function_name)
         
-        # Get repository URLs
-        GENERATE_TEXT_REPO=$(terraform output -raw generate_text_repository_url)
-        VISUALIZE_ATTENTION_REPO=$(terraform output -raw visualize_attention_repository_url)
+        # Get AWS account info
+        ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+        REGION="eu-west-2"
         
-        # Build and push generate_text image
-        cd ../src/lambda_functions/generate_text
-        docker build -t $GENERATE_TEXT_REPO:$IMAGE_TAG .
-        docker build -t $GENERATE_TEXT_REPO:latest .
-        docker push $GENERATE_TEXT_REPO:$IMAGE_TAG
-        docker push $GENERATE_TEXT_REPO:latest
+        # Build and deploy visualize_attention
+        cd ../src/lambda_functions/visualize_attention
+        docker build --no-cache -t $VISUALIZE_REPO .
+        docker tag $VISUALIZE_REPO:latest $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$VISUALIZE_REPO:latest
+        docker push $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$VISUALIZE_REPO:latest
+        aws lambda update-function-code \
+          --function-name $VISUALIZE_FUNCTION \
+          --image-uri $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$VISUALIZE_REPO:latest
         
-        # Build and push visualize_attention image
-        cd ../visualize_attention
-        docker build -t $VISUALIZE_ATTENTION_REPO:$IMAGE_TAG .
-        docker build -t $VISUALIZE_ATTENTION_REPO:latest .
-        docker push $VISUALIZE_ATTENTION_REPO:$IMAGE_TAG
-        docker push $VISUALIZE_ATTENTION_REPO:latest
-        
-        # Store image URIs for next step
-        echo "GENERATE_TEXT_IMAGE_URI=$GENERATE_TEXT_REPO:$IMAGE_TAG" >> $GITHUB_ENV
-        echo "VISUALIZE_ATTENTION_IMAGE_URI=$VISUALIZE_ATTENTION_REPO:$IMAGE_TAG" >> $GITHUB_ENV
-    
-    - name: Terraform Apply
-      if: github.event.inputs.action == 'deploy' || github.event.inputs.action == '' || github.event_name == 'push'
-      run: |
-        cd terraform
-        terraform apply -auto-approve \
-          -var="generate_text_image_uri=$GENERATE_TEXT_IMAGE_URI" \
-          -var="visualize_attention_image_uri=$VISUALIZE_ATTENTION_IMAGE_URI"
-    
-    - name: Upload Model to S3
-      if: github.event.inputs.action == 'deploy' || github.event.inputs.action == '' || github.event_name == 'push'
-      run: |
-        cd terraform
-        S3_BUCKET=$(terraform output -raw model_bucket_name)
-        aws s3 cp ../src/model/transformer_model.pt s3://$S3_BUCKET/model/
-        aws s3 cp ../src/model/tokenizer.json s3://$S3_BUCKET/model/
+        # Build and deploy generate_text
+        cd ../generate_text
+        docker build --no-cache -t $GENERATE_REPO .
+        docker tag $GENERATE_REPO:latest $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$GENERATE_REPO:latest
+        docker push $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$GENERATE_REPO:latest
+        aws lambda update-function-code \
+          --function-name $GENERATE_FUNCTION \
+          --image-uri $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$GENERATE_REPO:latest
     
     - name: Terraform Destroy
       if: github.event.inputs.action == 'destroy'
