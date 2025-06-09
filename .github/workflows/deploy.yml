@@ -5,13 +5,23 @@ on:
   push:
     branches: [ main ]
   workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'deploy'
+        type: choice
+        options:
+        - deploy
+        - destroy
+        - plan
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -19,26 +29,97 @@ jobs:
         python-version: '3.9'
     
     - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
+      uses: aws-actions/configure-aws-credentials@v4
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
     
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+    
     - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v2
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.5.0
     
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install torch boto3
     
-    - name: Run deployment script
+    - name: Terraform Init
       run: |
-        chmod +x scripts/deploy.sh
-        ./scripts/deploy.sh
+        cd terraform
+        terraform init
     
-    - name: Update Streamlit Cloud (if applicable)
+    - name: Terraform Plan
+      if: github.event.inputs.action == 'plan'
       run: |
-        # Add commands to update your Streamlit Cloud app
+        cd terraform
+        terraform plan
+    
+    - name: Build and Push Docker Images
+      if: github.event.inputs.action == 'deploy' || github.event.inputs.action == '' || github.event_name == 'push'
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        # Get ECR repository names from Terraform state or create them
+        cd terraform
+        
+        # Apply just the ECR resources first to get repository URLs
+        terraform apply -target=module.ecr -auto-approve || terraform apply -target=aws_ecr_repository.generate_text -target=aws_ecr_repository.visualize_attention -auto-approve
+        
+        # Get repository URLs
+        GENERATE_TEXT_REPO=$(terraform output -raw generate_text_repository_url)
+        VISUALIZE_ATTENTION_REPO=$(terraform output -raw visualize_attention_repository_url)
+        
+        # Build and push generate_text image
+        cd ../src/lambda_functions/generate_text
+        docker build -t $GENERATE_TEXT_REPO:$IMAGE_TAG .
+        docker build -t $GENERATE_TEXT_REPO:latest .
+        docker push $GENERATE_TEXT_REPO:$IMAGE_TAG
+        docker push $GENERATE_TEXT_REPO:latest
+        
+        # Build and push visualize_attention image
+        cd ../visualize_attention
+        docker build -t $VISUALIZE_ATTENTION_REPO:$IMAGE_TAG .
+        docker build -t $VISUALIZE_ATTENTION_REPO:latest .
+        docker push $VISUALIZE_ATTENTION_REPO:$IMAGE_TAG
+        docker push $VISUALIZE_ATTENTION_REPO:latest
+        
+        # Store image URIs for next step
+        echo "GENERATE_TEXT_IMAGE_URI=$GENERATE_TEXT_REPO:$IMAGE_TAG" >> $GITHUB_ENV
+        echo "VISUALIZE_ATTENTION_IMAGE_URI=$VISUALIZE_ATTENTION_REPO:$IMAGE_TAG" >> $GITHUB_ENV
+    
+    - name: Terraform Apply
+      if: github.event.inputs.action == 'deploy' || github.event.inputs.action == '' || github.event_name == 'push'
+      run: |
+        cd terraform
+        terraform apply -auto-approve \
+          -var="generate_text_image_uri=$GENERATE_TEXT_IMAGE_URI" \
+          -var="visualize_attention_image_uri=$VISUALIZE_ATTENTION_IMAGE_URI"
+    
+    - name: Upload Model to S3
+      if: github.event.inputs.action == 'deploy' || github.event.inputs.action == '' || github.event_name == 'push'
+      run: |
+        cd terraform
+        S3_BUCKET=$(terraform output -raw model_bucket_name)
+        aws s3 cp ../src/model/transformer_model.pt s3://$S3_BUCKET/model/
+        aws s3 cp ../src/model/tokenizer.json s3://$S3_BUCKET/model/
+    
+    - name: Terraform Destroy
+      if: github.event.inputs.action == 'destroy'
+      run: |
+        cd terraform
+        terraform destroy -auto-approve
+    
+    - name: Output Results
+      if: github.event.inputs.action == 'deploy' || github.event.inputs.action == '' || github.event_name == 'push'
+      run: |
+        cd terraform
         echo "Deployment complete!"
+        echo "API Endpoint: $(terraform output -raw api_endpoint)"
+        echo "S3 Bucket: $(terraform output -raw model_bucket_name)"
