@@ -1,95 +1,44 @@
+# .github/workflows/deploy.yml
 name: Deploy Transformer Model to AWS
 
 on:
-  # Trigger on push to main branch
   push:
-    branches: [main]
-  
-  # Manual trigger (this is what your Streamlit app will use)
+    branches: [ main ]
   workflow_dispatch:
-    inputs:
-      action:
-        description: 'Action to perform'
-        required: true
-        default: 'deploy'
-        type: choice
-        options:
-        - deploy
-        - destroy
-        - plan
 
-env:
-  AWS_REGION: us-east-1  # Change to your preferred region
-  ECR_REPOSITORY: transformer-model
-  
 jobs:
-  terraform:
+  deploy:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
     
     - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
+      uses: aws-actions/configure-aws-credentials@v1
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
-    
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v2
+        aws-region: us-east-1
     
     - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
-      with:
-        terraform_version: 1.5.0
+      uses: hashicorp/setup-terraform@v2
     
-    - name: Terraform Init
+    - name: Install dependencies
       run: |
-        cd terraform
-        terraform init
+        python -m pip install --upgrade pip
+        pip install torch boto3
     
-    - name: Terraform Plan
-      if: github.event.inputs.action == 'plan' || github.event.inputs.action == ''
+    - name: Run deployment script
       run: |
-        cd terraform
-        terraform plan
+        chmod +x scripts/deploy.sh
+        ./scripts/deploy.sh
     
-    - name: Build and Push Docker Image
-      if: github.event.inputs.action == 'deploy' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
-      env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        IMAGE_TAG: ${{ github.sha }}
+    - name: Update Streamlit Cloud (if applicable)
       run: |
-        # Build the Docker image
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
-        
-        # Push both tagged and latest versions
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
-    
-    - name: Terraform Apply
-      if: github.event.inputs.action == 'deploy' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
-      env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        IMAGE_TAG: ${{ github.sha }}
-      run: |
-        cd terraform
-        terraform apply -auto-approve \
-          -var="image_uri=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-    
-    - name: Terraform Destroy
-      if: github.event.inputs.action == 'destroy'
-      run: |
-        cd terraform
-        terraform destroy -auto-approve
-    
-    - name: Output API Endpoint
-      if: github.event.inputs.action == 'deploy' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
-      run: |
-        cd terraform
-        echo "API_ENDPOINT=$(terraform output -raw api_endpoint)" >> $GITHUB_OUTPUT
-        terraform output
+        # Add commands to update your Streamlit Cloud app
+        echo "Deployment complete!"
