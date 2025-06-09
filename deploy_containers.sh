@@ -24,7 +24,7 @@ docker --version
 
 # Navigate to project root
 echo "📁 Navigating to project..."
-cd /mnt/c/Users/dom/workspace/streamlit_portfolio/portfolio
+cd /mnt/c/Users/Dom/workspace/aws/aws-terraform-container-deploy
 
 # ECR Login
 echo "🔐 Logging into ECR..."
