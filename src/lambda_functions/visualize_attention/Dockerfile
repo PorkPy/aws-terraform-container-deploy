@@ -1,13 +1,8 @@
 FROM public.ecr.aws/lambda/python:3.9
 
-# Install specific NumPy version FIRST
-RUN pip install "numpy>=1.21.0,<2.0"
-
-# Then install PyTorch CPU version
-RUN pip install torch==2.2.0 --extra-index-url https://download.pytorch.org/whl/cpu
-
-# Install other dependencies (includes matplotlib for visualization)
-RUN pip install boto3 matplotlib
+# Copy requirements and install all dependencies
+COPY requirements.txt ${LAMBDA_TASK_ROOT}
+RUN pip install -r requirements.txt
 
 # Create model directory structure to match original project
 RUN mkdir -p ${LAMBDA_TASK_ROOT}/model
