@@ -1,6 +1,6 @@
 # src/lambda_functions/visualize_attention/requirements.txt  
 --extra-index-url https://download.pytorch.org/whl/cpu
-torch==2.7.1
+torch==2.2.0+cpu
 boto3>=1.26.89
 matplotlib>=3.5.3
 numpy>=1.22.4

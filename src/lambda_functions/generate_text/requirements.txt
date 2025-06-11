@@ -1,5 +1,5 @@
 # src/lambda_functions/generate_text/requirements.txt
 --extra-index-url https://download.pytorch.org/whl/cpu
-torch==2.7.1
+torch==2.2.0+cpu
 boto3>=1.26.89
 numpy>=1.22.4
