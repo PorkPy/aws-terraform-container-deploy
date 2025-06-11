@@ -73,7 +73,7 @@ jobs:
         cd terraform
         terraform plan
     
-    - name: Build and Push Docker Images & Update Lambda Functions
+    - name: Build and Push Docker Images to ECR
       if: github.event.inputs.action == 'deploy' || github.event.inputs.action == '' || github.event_name == 'push'
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -81,11 +81,9 @@ jobs:
       run: |
         cd terraform
         
-        # Get repository and function names from Terraform outputs
+        # Get repository names from Terraform outputs (ECR repos should already exist)
         GENERATE_REPO=$(terraform output -raw generate_text_repository_name)
         VISUALIZE_REPO=$(terraform output -raw visualize_attention_repository_name)
-        GENERATE_FUNCTION=$(terraform output -raw generate_function_name)
-        VISUALIZE_FUNCTION=$(terraform output -raw visualize_function_name)
         
         # Get AWS account info
         ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
@@ -94,7 +92,7 @@ jobs:
         # Clean up Docker before builds
         docker system prune -f
         
-        # Build and deploy visualize_attention
+        # Build and push visualize_attention
         echo "Building visualize_attention function..."
         cd ../src/lambda_functions/visualize_attention
         docker build --no-cache -t $VISUALIZE_REPO .
@@ -105,22 +103,26 @@ jobs:
         docker rmi $VISUALIZE_REPO:latest || true
         docker system prune -f
         
-        aws lambda update-function-code \
-          --function-name $VISUALIZE_FUNCTION \
-          --image-uri $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$VISUALIZE_REPO:latest
-        
-        # Build and deploy generate_text
+        # Build and push generate_text
         echo "Building generate_text function..."
         cd ../generate_text
         docker build --no-cache -t $GENERATE_REPO .
         docker tag $GENERATE_REPO:latest $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$GENERATE_REPO:latest
         docker push $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$GENERATE_REPO:latest
-        aws lambda update-function-code \
-          --function-name $GENERATE_FUNCTION \
-          --image-uri $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$GENERATE_REPO:latest
         
         # Final cleanup
         docker system prune -af --volumes
+    
+    - name: Apply Terraform Changes - Deploy Infrastructure & Update Lambda Functions
+      if: github.event.inputs.action == 'deploy' || github.event.inputs.action == '' || github.event_name == 'push'
+      run: |
+        cd terraform
+        # Apply all Terraform changes including:
+        # - Lambda function configuration (timeout, memory)
+        # - Lambda function code (image URIs)
+        # - API Gateway changes
+        # - Any other infrastructure updates
+        terraform apply -auto-approve
     
     - name: Terraform Destroy
       if: github.event.inputs.action == 'destroy'

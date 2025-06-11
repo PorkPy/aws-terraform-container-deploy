@@ -1,5 +1,8 @@
 FROM public.ecr.aws/lambda/python:3.9
 
+# Debug: Check what's already installed in the base image
+RUN echo "=== Python packages in base image ===" && pip list | grep -i numpy || echo "No numpy found in base image"
+
 # Debug: Show what requirements file we're actually using
 COPY requirements.txt ${LAMBDA_TASK_ROOT}
 RUN echo "=== Requirements file content ===" && cat requirements.txt && echo "=== End requirements ==="
