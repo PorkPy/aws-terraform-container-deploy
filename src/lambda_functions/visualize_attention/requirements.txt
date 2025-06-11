@@ -1,5 +1,6 @@
-# This file is used to install the dependencies for the Lambda function that visualizes attention maps.
-torch==2.2.0 --extra-index-url https://download.pytorch.org/whl/cpu
-boto3==1.26.89
-matplotlib==3.5.3
-numpy==1.22.4
+# src/lambda_functions/visualize_attention/requirements.txt  
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.7.1
+boto3>=1.26.89
+matplotlib>=3.5.3
+numpy>=1.22.4
