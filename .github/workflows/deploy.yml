@@ -1,17 +1,26 @@
-# .github/workflows/deploy.yml
 name: Deploy Transformer Model to AWS
 
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'deploy'
+        type: choice
+        options:
+        - deploy
+        - destroy
+        - plan
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -19,26 +28,83 @@ jobs:
         python-version: '3.9'
     
     - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
+      uses: aws-actions/configure-aws-credentials@v4
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1
+        aws-region: eu-west-2
+    
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
     
     - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v2
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.5.0
     
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install torch boto3
     
-    - name: Run deployment script
+    - name: Terraform Init
       run: |
-        chmod +x scripts/deploy.sh
-        ./scripts/deploy.sh
+        cd terraform
+        terraform init
     
-    - name: Update Streamlit Cloud (if applicable)
+    - name: Terraform Plan
+      if: github.event.inputs.action == 'plan'
       run: |
-        # Add commands to update your Streamlit Cloud app
+        cd terraform
+        terraform plan
+    
+    - name: Build and Push Docker Images & Update Lambda Functions
+      if: github.event.inputs.action == 'deploy' || github.event.inputs.action == '' || github.event_name == 'push'
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        cd terraform
+        
+        # Get repository and function names from Terraform outputs
+        GENERATE_REPO=$(terraform output -raw generate_text_repository_name)
+        VISUALIZE_REPO=$(terraform output -raw visualize_attention_repository_name)
+        GENERATE_FUNCTION=$(terraform output -raw generate_function_name)
+        VISUALIZE_FUNCTION=$(terraform output -raw visualize_function_name)
+        
+        # Get AWS account info
+        ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+        REGION="eu-west-2"
+        
+        # Build and deploy visualize_attention
+        cd ../src/lambda_functions/visualize_attention
+        docker build --no-cache -t $VISUALIZE_REPO .
+        docker tag $VISUALIZE_REPO:latest $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$VISUALIZE_REPO:latest
+        docker push $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$VISUALIZE_REPO:latest
+        aws lambda update-function-code \
+          --function-name $VISUALIZE_FUNCTION \
+          --image-uri $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$VISUALIZE_REPO:latest
+        
+        # Build and deploy generate_text
+        cd ../generate_text
+        docker build --no-cache -t $GENERATE_REPO .
+        docker tag $GENERATE_REPO:latest $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$GENERATE_REPO:latest
+        docker push $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$GENERATE_REPO:latest
+        aws lambda update-function-code \
+          --function-name $GENERATE_FUNCTION \
+          --image-uri $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$GENERATE_REPO:latest
+    
+    - name: Terraform Destroy
+      if: github.event.inputs.action == 'destroy'
+      run: |
+        cd terraform
+        terraform destroy -auto-approve
+    
+    - name: Output Results
+      if: github.event.inputs.action == 'deploy' || github.event.inputs.action == '' || github.event_name == 'push'
+      run: |
+        cd terraform
         echo "Deployment complete!"
+        echo "API Endpoint: $(terraform output -raw api_endpoint)"
+        echo "S3 Bucket: $(terraform output -raw model_bucket_name)"
