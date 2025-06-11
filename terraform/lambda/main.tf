@@ -90,8 +90,8 @@ resource "aws_lambda_function" "generate_text" {
   package_type = "Image"
   image_uri    = var.generate_text_image_uri
   
-  timeout     = 30
-  memory_size = 1024
+  timeout     = 900  # Changed from 30 to 900 seconds (15 minutes)
+  memory_size = 3008 # Increased from 1024 to 3008 MB for transformer models
   
   environment {
     variables = {
@@ -113,8 +113,8 @@ resource "aws_lambda_function" "visualize_attention" {
   package_type = "Image"
   image_uri    = var.visualize_attention_image_uri
   
-  timeout     = 30
-  memory_size = 1024
+  timeout     = 900  # Changed from 30 to 900 seconds (15 minutes)
+  memory_size = 3008 # Increased from 1024 to 3008 MB for transformer models
   
   environment {
     variables = {
