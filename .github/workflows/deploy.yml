@@ -1,4 +1,3 @@
-# .github/workflows/deploy.yml
 name: Deploy Transformer Model to AWS
 
 on:
