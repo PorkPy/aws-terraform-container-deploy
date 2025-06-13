@@ -7,11 +7,22 @@ from PIL import Image
 import time
 import threading
 
+# Import monitoring dashboard
+from monitoring_dashboard import main_monitoring
+
 # Page config
 st.set_page_config(
     page_title="Transformer Model Demo",
     page_icon="🤖",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# Sidebar navigation
+st.sidebar.title("🤖 Navigation")
+page = st.sidebar.selectbox(
+    "Choose a page:",
+    ["🏠 Main Demo", "🔍 Monitoring Dashboard"]
 )
 
 # API Configuration
@@ -60,62 +71,57 @@ def call_api(endpoint, payload):
     except Exception as e:
         return None, f"Unexpected error: {str(e)}"
 
-# AWS Lambda Warmup Screen
-if 'models_ready' not in st.session_state:
-    st.session_state.models_ready = False
+def main_demo():
+    """Main demo application"""
+    # Initialize warmup state
+    if 'models_ready' not in st.session_state:
+        st.session_state.models_ready = False
+        st.session_state.warmup_start_time = time.time()
+        
+        # Start Lambda warmup immediately
+        threading.Thread(target=warm_up_lambdas, daemon=True).start()
     
-    # Professional loading screen
-    st.title("🤖 Transformer Model Demo")
-    st.markdown("---")
-    
-    with st.container():
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            with st.spinner(""):
-                st.markdown("""
-                ### ☁️ Initializing AWS Services
-                
-                The transformer models are hosted on **AWS Lambda** and need to spin up.
-                This includes:
-                - 📦 Loading model weights from S3
-                - 🧠 Initializing neural network layers  
-                - 🔧 Setting up inference pipeline
-                
-                **Estimated time: ~30 seconds**
-                """)
-                
-                progress_bar = st.progress(0)
-                status_text = st.empty()
-                
-                # Start Lambda warmup
-                threading.Thread(target=warm_up_lambdas, daemon=True).start()
-                
-                # Progress with status updates
-                for i in range(30):
-                    if i < 10:
-                        status_text.text("🚀 Starting AWS Lambda functions...")
-                    elif i < 20:
-                        status_text.text("📚 Loading transformer models...")
-                    else:
-                        status_text.text("✅ Almost ready...")
-                    
-                    progress_bar.progress((i + 1) / 30)
-                    time.sleep(1)
-                
-                st.success("🎉 Models are now ready for inference!")
-                time.sleep(2)
-    
-    st.session_state.models_ready = True
-    st.rerun()
+    # Check if enough time has passed for warmup
+    if not st.session_state.models_ready:
+        elapsed_time = time.time() - st.session_state.warmup_start_time
+        
+        if elapsed_time >= 30:  # Warmup complete
+            st.session_state.models_ready = True
+            st.rerun()
 
-# Main Application (only shows after models are ready)
-if st.session_state.get('models_ready', False):
+    # Always show the main app, but disable buttons if not ready
     st.title("🤖 Transformer Model Demo")
-    st.markdown("*Models are running on AWS Lambda with sub-second response times*")
+    
+    # Show warmup status
+    if not st.session_state.models_ready:
+        elapsed_time = time.time() - st.session_state.warmup_start_time
+        progress = min(elapsed_time / 30, 1.0)
+        remaining = max(30 - int(elapsed_time), 0)
+        
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.warning(f"⏳ **Models warming up... {remaining} seconds remaining**")
+        with col2:
+            st.progress(progress)
+        
+        # Auto-refresh during warmup
+        time.sleep(1)
+        st.rerun()
+    else:
+        # Show ready status
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.markdown("*Models are running on AWS Lambda with sub-second response times*")
+        with col2:
+            st.success("🟢 **Models Ready**")
+    
     st.markdown("---")
     
     # Create two columns for the different functionalities
     col1, col2 = st.columns(2)
+    
+    # Determine if buttons should be disabled
+    buttons_disabled = not st.session_state.models_ready
     
     # Text Generation Section
     with col1:
@@ -125,24 +131,33 @@ if st.session_state.get('models_ready', False):
         prompt = st.text_area(
             "Enter your prompt:", 
             value="The future of artificial intelligence",
-            height=100
+            height=100,
+            disabled=buttons_disabled
         )
         
-        max_length = st.slider("Max length:", min_value=10, max_value=100, value=50)
+        max_length = st.slider(
+            "Max length:", 
+            min_value=10, 
+            max_value=100, 
+            value=50,
+            disabled=buttons_disabled
+        )
         
-        if st.button("🚀 Generate Text", type="primary"):
+        # Button with conditional styling and disabled state
+        button_text = "⏳ Warming Up..." if buttons_disabled else "🚀 Generate Text"
+        
+        if st.button(button_text, type="primary", disabled=buttons_disabled):
             if prompt.strip():
                 with st.spinner("Generating text..."):
-                    payload = {
-                        "prompt": prompt,
-                        "max_length": max_length
-                    }
-                    
+                    start_time = time.time()
+                    payload = {"prompt": prompt, "max_length": max_length}
                     result, error = call_api(GENERATE_ENDPOINT, payload)
+                    response_time = time.time() - start_time
                     
                     if result:
                         st.subheader("Generated Text:")
                         st.write(result.get("generated_text", "No text generated"))
+                        st.caption(f"⚡ Generated in {response_time:.1f}s")
                         
                         if "tokens_generated" in result:
                             st.caption(f"Tokens generated: {result['tokens_generated']}")
@@ -150,6 +165,10 @@ if st.session_state.get('models_ready', False):
                         st.error(f"❌ {error}")
             else:
                 st.warning("Please enter a prompt")
+        
+        # Show help text when disabled
+        if buttons_disabled:
+            st.caption("🔄 Buttons will be enabled once models finish warming up")
     
     # Attention Visualization Section  
     with col2:
@@ -159,25 +178,36 @@ if st.session_state.get('models_ready', False):
         text_input = st.text_area(
             "Enter text to analyze:", 
             value="Hello world, this is a test",
-            height=100
+            height=100,
+            disabled=buttons_disabled
         )
         
         col2a, col2b = st.columns(2)
         with col2a:
-            layer = st.selectbox("Layer:", options=list(range(4)), index=0)
+            layer = st.selectbox(
+                "Layer:", 
+                options=list(range(4)), 
+                index=0,
+                disabled=buttons_disabled
+            )
         with col2b:
-            head = st.selectbox("Attention Head:", options=list(range(8)), index=0)
+            head = st.selectbox(
+                "Attention Head:", 
+                options=list(range(8)), 
+                index=0,
+                disabled=buttons_disabled
+            )
         
-        if st.button("🔍 Visualize Attention", type="primary"):
+        # Button with conditional styling and disabled state
+        button_text = "⏳ Warming Up..." if buttons_disabled else "🔍 Visualize Attention"
+        
+        if st.button(button_text, type="primary", disabled=buttons_disabled, key="viz_button"):
             if text_input.strip():
                 with st.spinner("Creating attention visualization..."):
-                    payload = {
-                        "text": text_input,
-                        "layer": layer,
-                        "head": head
-                    }
-                    
+                    start_time = time.time()
+                    payload = {"text": text_input, "layer": layer, "head": head}
                     result, error = call_api(VISUALIZE_ENDPOINT, payload)
+                    response_time = time.time() - start_time
                     
                     if result and result.get("attention_image"):
                         st.subheader("Attention Heatmap:")
@@ -187,8 +217,9 @@ if st.session_state.get('models_ready', False):
                             image_data = base64.b64decode(result["attention_image"])
                             image = Image.open(BytesIO(image_data))
                             
-                            # Display image with new parameter name
+                            # Display image with response time
                             st.image(image, use_container_width=True)
+                            st.caption(f"⚡ Visualization created in {response_time:.1f}s")
                             
                             if "tokens" in result:
                                 st.caption(f"Analyzed tokens: {result['tokens']}")
@@ -199,6 +230,10 @@ if st.session_state.get('models_ready', False):
                         st.error(f"❌ {error or 'No visualization generated'}")
             else:
                 st.warning("Please enter text to analyze")
+        
+        # Show help text when disabled
+        if buttons_disabled:
+            st.caption("🔄 Buttons will be enabled once models finish warming up")
     
     # Footer
     st.markdown("---")
@@ -207,3 +242,9 @@ if st.session_state.get('models_ready', False):
         <p>Built with Streamlit • Models hosted on AWS Lambda • Infrastructure managed with Terraform</p>
     </div>
     """, unsafe_allow_html=True)
+
+# Main app logic
+if page == "🏠 Main Demo":
+    main_demo()
+elif page == "🔍 Monitoring Dashboard":
+    main_monitoring()
