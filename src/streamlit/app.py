@@ -143,8 +143,8 @@ def main():
                             # Decode base64 image
                             image_data = base64.b64decode(result["attention_image"])
                             image = Image.open(BytesIO(image_data))
-                            st.image(image, use_column_width=True)
-                            
+                            st.image(image, use_container_width=True)
+
                             # Explanation
                             st.subheader("💡 What am I looking at?")
                             st.markdown("""
