@@ -12,6 +12,9 @@ RUN pip install --no-cache-dir -r requirements.txt && \
     pip cache purge && \
     rm -rf /root/.cache/pip
 
+RUN echo "=== Final installed packages ===" && pip list | grep -E "(numpy|torch)" && echo "=== End packages ==="
+
+
 # Create model directory structure to match original project
 RUN mkdir -p ${LAMBDA_TASK_ROOT}/model
 
