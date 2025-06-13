@@ -30,6 +30,17 @@ def lambda_handler(event, context):
         layer = int(body.get('layer', 0))
         head = int(body.get('head', 0))
         
+        # Handle warmup requests
+        if text == "warmup":
+            return {
+                'statusCode': 200,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps({'status': 'warmed'})
+            }
+        
         # Get environment variables
         model_bucket = os.environ['MODEL_BUCKET']
         model_key = os.environ['MODEL_KEY']
@@ -70,21 +81,44 @@ def lambda_handler(event, context):
 
             print("Model loaded successfully!")
             
-            model.eval()
-            
             # Tokenize input
             input_ids = tokenizer.encode(text)
             
             # Get attention weights
             print("Getting attention weights...")
+            print(f"DEBUG: input_ids: {input_ids}")
+            print(f"DEBUG: text: '{text}'")
+            
             with torch.no_grad():
-                input_tensor = torch.tensor([input_ids])
-                # Forward pass to get logits and attention weights
-                logits, attentions = model(input_tensor)
+                try:
+                    input_tensor = torch.tensor([input_ids])
+                    print(f"DEBUG: input_tensor shape: {input_tensor.shape}")
+                    print(f"DEBUG: About to call model forward pass")
+                    
+                    # Forward pass to get logits and attention weights
+                    logits, attentions = model(input_tensor)
+                    
+                    print(f"DEBUG: Forward pass successful")
+                    print(f"DEBUG: logits shape: {logits.shape if logits is not None else 'None'}")
+                    print(f"DEBUG: attentions type: {type(attentions)}")
+                    print(f"DEBUG: attentions length: {len(attentions) if attentions is not None else 'None'}")
+                    
+                except Exception as e:
+                    print(f"DEBUG: Model forward pass failed: {e}")
+                    import traceback
+                    print(f"DEBUG: Forward pass traceback: {traceback.format_exc()}")
+                    raise e
+            
+            print("DEBUG: About to create visualization")
             
             # Create visualization
             tokens = [tokenizer.idx_to_word.get(idx, '<UNK>') for idx in input_ids]
+            print(f"DEBUG: tokens: {tokens}")
+            
             attention_image = visualize_attention(tokens, attentions, layer, head)
+            
+            if attention_image is None:
+                raise Exception("Visualization failed - returned None")
             
             return {
                 'statusCode': 200,

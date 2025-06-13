@@ -86,12 +86,15 @@ resource "aws_lambda_function" "generate_text" {
   function_name = "${var.project_name}-generate-text-${var.resource_suffix}"
   role          = aws_iam_role.lambda_role.arn
   
-  # Container configuration - dynamically updated
+  # Container configuration
   package_type = "Image"
   image_uri    = var.generate_text_image_uri
   
-  timeout     = 900  # Changed from 30 to 900 seconds (15 minutes)
-  memory_size = 3008 # Increased from 1024 to 3008 MB for transformer models
+  timeout     = 900  # 15 minutes
+  memory_size = 3008 # 3GB for transformer models
+  
+  # Prevent runaway concurrent executions
+  reserved_concurrent_executions = 1
   
   environment {
     variables = {
@@ -99,13 +102,6 @@ resource "aws_lambda_function" "generate_text" {
       MODEL_KEY    = "model/transformer_model.pt"
       TOKENIZER_KEY = "model/tokenizer.json"
     }
-  }
-  
-  # Force update when image changes
-  lifecycle {
-    ignore_changes = [
-      # Don't ignore image_uri - we want Terraform to update it
-    ]
   }
   
   tags = var.common_tags
@@ -116,12 +112,15 @@ resource "aws_lambda_function" "visualize_attention" {
   function_name = "${var.project_name}-visualize-attention-${var.resource_suffix}"
   role          = aws_iam_role.lambda_role.arn
   
-  # Container configuration - dynamically updated
+  # Container configuration
   package_type = "Image"
   image_uri    = var.visualize_attention_image_uri
   
-  timeout     = 900  # Changed from 30 to 900 seconds (15 minutes)
-  memory_size = 3008 # Increased from 1024 to 3008 MB for transformer models
+  timeout     = 900  # 15 minutes
+  memory_size = 3008 # 3GB for transformer models
+  
+  # Prevent runaway concurrent executions
+  reserved_concurrent_executions = 1
   
   environment {
     variables = {
@@ -130,14 +129,9 @@ resource "aws_lambda_function" "visualize_attention" {
       TOKENIZER_KEY = "model/tokenizer.json"
       VISUALIZATION_BUCKET = var.model_bucket
       VISUALIZATION_PREFIX = "visualizations/"
+      # Fix matplotlib cache directory issues
+      MPLCONFIGDIR = "/tmp/matplotlib"
     }
-  }
-  
-  # Force update when image changes
-  lifecycle {
-    ignore_changes = [
-      # Don't ignore image_uri - we want Terraform to update it
-    ]
   }
   
   tags = var.common_tags
