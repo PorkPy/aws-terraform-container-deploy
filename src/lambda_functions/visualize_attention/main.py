@@ -122,38 +122,58 @@ def visualize_attention(tokens, attentions, layer=0, head=0):
             layer = 0
         
         attention_tensor = attentions[layer]
+        print(f"DEBUG: attention_tensor shape: {attention_tensor.shape}")
+        print(f"DEBUG: attention_tensor type: {type(attention_tensor)}")
+        
         if len(attention_tensor.shape) == 4:  # [batch, heads, seq, seq]
             if head >= attention_tensor.shape[1]:
                 head = 0
+            print(f"DEBUG: Using 4D tensor, extracting [0, {head}]")
             attention = attention_tensor[0, head].cpu().numpy()
         else:
+            print(f"DEBUG: Using non-4D tensor, extracting [0]")
             attention = attention_tensor[0].cpu().numpy()
         
+        print(f"DEBUG: attention array shape: {attention.shape}")
+        print(f"DEBUG: attention array type: {type(attention)}")
+        
         fig, ax = plt.subplots(figsize=(10, 10))
+        print("DEBUG: Created matplotlib figure")
+        
         im = ax.imshow(attention, cmap='Blues')
+        print("DEBUG: Created imshow")
         
         # Set ticks and labels
         ax.set_xticks(range(len(tokens)))
         ax.set_yticks(range(len(tokens)))
         ax.set_xticklabels(tokens, rotation=45, ha='right')
         ax.set_yticklabels(tokens)
+        print("DEBUG: Set ticks and labels")
         
         ax.set_title(f"Attention Layer {layer+1}, Head {head+1}")
         ax.set_xlabel("Key")
         ax.set_ylabel("Query")
+        print("DEBUG: Set titles and labels")
         
         plt.colorbar(im, ax=ax)
         plt.tight_layout()
+        print("DEBUG: Added colorbar and tight layout")
         
         # Convert plot to base64 string
         buffer = BytesIO()
         plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
         buffer.seek(0)
+        print("DEBUG: Saved figure to buffer")
+        
         image_base64 = base64.b64encode(buffer.read()).decode('utf-8')
         plt.close(fig)
+        print("DEBUG: Converted to base64 and closed figure")
         
         return image_base64
         
     except Exception as e:
-        print(f"Visualization error: {e}")
+        print(f"Visualization error details: {e}")
+        print(f"Error type: {type(e)}")
+        import traceback
+        print(f"Full traceback: {traceback.format_exc()}")
         return None
