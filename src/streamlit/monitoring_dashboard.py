@@ -1,10 +1,8 @@
 import streamlit as st
-import boto3
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
-import json
 import time
 
 # AWS Configuration
@@ -17,16 +15,35 @@ FUNCTION_NAMES = [
 def get_aws_client(service):
     """Get AWS client with error handling"""
     try:
+        import boto3
         return boto3.client(service, region_name=AWS_REGION)
-    except Exception as e:
-        st.error(f"Failed to connect to AWS {service}: {str(e)}")
+    except Exception:
         return None
 
 def get_lambda_info():
     """Get Lambda function information"""
     lambda_client = get_aws_client('lambda')
     if not lambda_client:
-        return {}
+        # Return demo data when AWS credentials aren't available
+        st.info("📍 **Demo Mode**: Showing sample data (AWS credentials not configured)")
+        return {
+            'transformer-model-generate-text-q3ukv7': {
+                'timeout': 900,
+                'memory': 3008,
+                'last_modified': '2025-06-13T10:00:00.000+0000',
+                'runtime': 'Image',
+                'state': 'Active',
+                'code_size': 256000000
+            },
+            'transformer-model-visualize-attention-q3ukv7': {
+                'timeout': 900,
+                'memory': 3008,
+                'last_modified': '2025-06-13T10:00:00.000+0000',
+                'runtime': 'Image',
+                'state': 'Active',
+                'code_size': 278000000
+            }
+        }
     
     functions_info = {}
     for function_name in FUNCTION_NAMES:
@@ -51,7 +68,31 @@ def get_cloudwatch_metrics():
     """Get CloudWatch metrics for Lambda functions"""
     cloudwatch = get_aws_client('cloudwatch')
     if not cloudwatch:
-        return {}
+        # Return demo metrics data
+        import random
+        demo_data = {}
+        for function_name in FUNCTION_NAMES:
+            # Generate demo invocations
+            invocations = []
+            duration = []
+            for i in range(24):  # 24 hours of data
+                timestamp = datetime.utcnow() - timedelta(hours=23-i)
+                invocations.append({
+                    'Timestamp': timestamp,
+                    'Sum': random.randint(5, 25)
+                })
+                duration.append({
+                    'Timestamp': timestamp,
+                    'Average': random.randint(800, 1200),
+                    'Maximum': random.randint(1200, 2000)
+                })
+            
+            demo_data[function_name] = {
+                'invocations': invocations,
+                'duration': duration,
+                'errors': []  # No errors in demo
+            }
+        return demo_data
     
     end_time = datetime.utcnow()
     start_time = end_time - timedelta(hours=24)
@@ -109,7 +150,24 @@ def get_recent_logs():
     """Get recent CloudWatch logs"""
     logs_client = get_aws_client('logs')
     if not logs_client:
-        return {}
+        # Return demo logs
+        demo_logs = {}
+        for function_name in FUNCTION_NAMES:
+            demo_logs[function_name] = [
+                {
+                    'timestamp': datetime.utcnow() - timedelta(minutes=5),
+                    'message': 'Model loaded successfully!'
+                },
+                {
+                    'timestamp': datetime.utcnow() - timedelta(minutes=10),
+                    'message': 'Downloading model from S3...'
+                },
+                {
+                    'timestamp': datetime.utcnow() - timedelta(minutes=15),
+                    'message': 'Lambda function initialized'
+                }
+            ]
+        return demo_logs
     
     recent_logs = {}
     start_time = int((datetime.utcnow() - timedelta(hours=1)).timestamp() * 1000)
@@ -161,9 +219,12 @@ def display_system_health():
                     st.metric("State", info['state'])
                     
                     # Last modified
-                    last_mod = datetime.fromisoformat(info['last_modified'].replace('Z', '+00:00'))
-                    time_ago = datetime.now(last_mod.tzinfo) - last_mod
-                    st.caption(f"Updated {time_ago.days}d {time_ago.seconds//3600}h ago")
+                    try:
+                        last_mod = datetime.fromisoformat(info['last_modified'].replace('Z', '+00:00'))
+                        time_ago = datetime.now(last_mod.tzinfo) - last_mod
+                        st.caption(f"Updated {time_ago.days}d {time_ago.seconds//3600}h ago")
+                    except:
+                        st.caption("Recently updated")
 
 def display_performance_metrics():
     """Display performance metrics and charts"""
@@ -219,6 +280,7 @@ def display_performance_metrics():
     
     with tab3:
         st.subheader("Error Count")
+        error_found = False
         for func_name, data in metrics_data.items():
             if 'error' not in data and data['errors']:
                 df = pd.DataFrame(data['errors'])
@@ -233,10 +295,10 @@ def display_performance_metrics():
                     total_errors = df['Sum'].sum()
                     if total_errors > 0:
                         st.error(f"Total Errors: {int(total_errors)}")
-                    else:
-                        st.success("No errors in the last 24 hours! 🎉")
-                else:
-                    st.success("No errors in the last 24 hours! 🎉")
+                        error_found = True
+        
+        if not error_found:
+            st.success("No errors in the last 24 hours! 🎉")
 
 def display_recent_logs():
     """Display recent logs"""
@@ -262,14 +324,14 @@ def display_recent_logs():
             else:
                 st.info("No recent logs found")
         else:
-            st.error(f"Error fetching logs: {logs[0].get('error', 'Unknown error')}")
+            if logs:
+                st.error(f"Error fetching logs: {logs[0].get('error', 'Unknown error')}")
+            else:
+                st.info("No logs available")
 
 def display_cost_monitoring():
     """Display cost monitoring estimates"""
     st.header("💰 Cost Monitoring")
-    
-    # This would require AWS Cost Explorer API or CloudWatch billing metrics
-    # For demo purposes, we'll show estimated costs based on invocations
     
     st.info("💡 **Cost Optimization Tips:**")
     col1, col2 = st.columns(2)
