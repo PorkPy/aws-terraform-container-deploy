@@ -1,284 +1,250 @@
-# aws_app.py (Updated for working AWS API)
 import streamlit as st
 import requests
 import json
 import base64
 from io import BytesIO
 from PIL import Image
-import matplotlib.pyplot as plt
+import time
+import threading
 
-# Set page config
+# Import monitoring dashboard
+from monitoring_dashboard import main_monitoring
+
+# Page config
 st.set_page_config(
-    page_title="Transformer Demo - AWS Cloud Edition",
+    page_title="Transformer Model Demo",
     page_icon="🤖",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Your actual working API endpoint
-API_ENDPOINT = "https://0fc0dgwg69.execute-api.eu-west-2.amazonaws.com"
+# Sidebar navigation
+st.sidebar.title("🤖 Navigation")
+page = st.sidebar.selectbox(
+    "Choose a page:",
+    ["🏠 Main Demo", "🔍 Monitoring Dashboard"]
+)
 
-def main():
-    st.title("🤖 Transformer from Scratch - AWS Cloud Edition")
-    st.markdown("""
-    This app demonstrates a transformer model built from scratch with PyTorch.
-    The model is deployed on AWS Lambda and accessed via API Gateway.
-    """)
+# API Configuration
+API_BASE_URL = "https://your-api-gateway-url"  # Replace with your actual API Gateway URL
+GENERATE_ENDPOINT = f"{API_BASE_URL}/generate-text"
+VISUALIZE_ENDPOINT = f"{API_BASE_URL}/visualize-attention"
+
+def warm_up_lambdas():
+    """Warm up both Lambda functions"""
+    endpoints = [
+        {"url": GENERATE_ENDPOINT, "payload": {"prompt": "warmup", "max_length": 10}},
+        {"url": VISUALIZE_ENDPOINT, "payload": {"text": "warmup", "layer": 0, "head": 0}}
+    ]
     
-    # Sidebar
-    st.sidebar.header("AWS Cloud Deployment")
-    st.sidebar.success(f"✅ Connected to AWS API")
-    st.sidebar.info(f"Endpoint: {API_ENDPOINT}")
-    
-    # Generation settings
-    st.sidebar.subheader("Generation Settings")
-    temperature = st.sidebar.slider("Temperature", min_value=0.1, max_value=2.0, value=1.0, step=0.1,
-                                  help="Higher values produce more diverse text, lower values are more deterministic")
-    max_tokens = st.sidebar.slider("Max Tokens", min_value=5, max_value=100, value=20, step=5,
-                                 help="Maximum number of tokens to generate")
-    top_k = st.sidebar.slider("Top-k", min_value=1, max_value=100, value=50, step=1,
-                            help="Sample from top k most probable tokens")
-    
-    # Visualization settings
-    st.sidebar.subheader("Visualization Settings")
-    layer = st.sidebar.slider("Layer", min_value=0, max_value=3, value=0,
-                            help="Transformer layer to visualize (0-3)")
-    head = st.sidebar.slider("Head", min_value=0, max_value=7, value=0,
-                           help="Attention head to visualize (0-7)")
-    
-    # Main content
-    tabs = st.tabs(["Text Generation", "Attention Visualization", "Model Architecture", "AWS Architecture"])
-    
-    # Text Generation Tab
-    with tabs[0]:
-        st.header("🔤 Text Generation")
+    for endpoint in endpoints:
+        try:
+            requests.post(
+                endpoint["url"], 
+                json=endpoint["payload"], 
+                timeout=1,
+                headers={"Content-Type": "application/json"}
+            )
+        except:
+            # Ignore all errors - this is just for warming
+            pass
+
+def call_api(endpoint, payload):
+    """Make API call with error handling"""
+    try:
+        response = requests.post(
+            endpoint,
+            json=payload,
+            headers={"Content-Type": "application/json"},
+            timeout=120  # 2 minute timeout for actual requests
+        )
         
-        prompt = st.text_area("Enter a prompt", "Once upon a time", height=100)
+        if response.status_code == 200:
+            return response.json(), None
+        else:
+            return None, f"API Error ({response.status_code}): {response.text}"
+            
+    except requests.exceptions.Timeout:
+        return None, "Request timed out. The model may still be warming up."
+    except requests.exceptions.RequestException as e:
+        return None, f"Network error: {str(e)}"
+    except Exception as e:
+        return None, f"Unexpected error: {str(e)}"
+
+def main_demo():
+    """Main demo application"""
+    # Initialize warmup state
+    if 'models_ready' not in st.session_state:
+        st.session_state.models_ready = False
+        st.session_state.warmup_start_time = time.time()
         
-        col1, col2 = st.columns([1, 4])
+        # Start Lambda warmup immediately
+        threading.Thread(target=warm_up_lambdas, daemon=True).start()
+    
+    # Check if enough time has passed for warmup
+    if not st.session_state.models_ready:
+        elapsed_time = time.time() - st.session_state.warmup_start_time
+        
+        if elapsed_time >= 30:  # Warmup complete
+            st.session_state.models_ready = True
+            st.rerun()
+
+    # Always show the main app, but disable buttons if not ready
+    st.title("🤖 Transformer Model Demo")
+    
+    # Show warmup status
+    if not st.session_state.models_ready:
+        elapsed_time = time.time() - st.session_state.warmup_start_time
+        progress = min(elapsed_time / 30, 1.0)
+        remaining = max(30 - int(elapsed_time), 0)
+        
+        col1, col2 = st.columns([3, 1])
         with col1:
-            generate_btn = st.button("🚀 Generate", type="primary")
+            st.warning(f"⏳ **Models warming up... {remaining} seconds remaining**")
+        with col2:
+            st.progress(progress)
         
-        if generate_btn:
-            with st.spinner("Calling AWS Lambda..."):
-                try:
-                    # Call the generate API
-                    response = requests.post(
-                        f"{API_ENDPOINT}/generate",
-                        json={
-                            "prompt": prompt,
-                            "temperature": temperature,
-                            "max_tokens": max_tokens,
-                            "top_k": top_k
-                        },
-                        headers={"Content-Type": "application/json"}
-                    )
+        # Auto-refresh during warmup
+        time.sleep(1)
+        st.rerun()
+    else:
+        # Show ready status
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.markdown("*Models are running on AWS Lambda with sub-second response times*")
+        with col2:
+            st.success("🟢 **Models Ready**")
+    
+    st.markdown("---")
+    
+    # Create two columns for the different functionalities
+    col1, col2 = st.columns(2)
+    
+    # Determine if buttons should be disabled
+    buttons_disabled = not st.session_state.models_ready
+    
+    # Text Generation Section
+    with col1:
+        st.header("📝 Text Generation")
+        st.markdown("Generate text using a custom transformer model")
+        
+        prompt = st.text_area(
+            "Enter your prompt:", 
+            value="The future of artificial intelligence",
+            height=100,
+            disabled=buttons_disabled
+        )
+        
+        max_length = st.slider(
+            "Max length:", 
+            min_value=10, 
+            max_value=100, 
+            value=50,
+            disabled=buttons_disabled
+        )
+        
+        # Button with conditional styling and disabled state
+        button_text = "⏳ Warming Up..." if buttons_disabled else "🚀 Generate Text"
+        
+        if st.button(button_text, type="primary", disabled=buttons_disabled):
+            if prompt.strip():
+                with st.spinner("Generating text..."):
+                    start_time = time.time()
+                    payload = {"prompt": prompt, "max_length": max_length}
+                    result, error = call_api(GENERATE_ENDPOINT, payload)
+                    response_time = time.time() - start_time
                     
-                    if response.status_code == 200:
-                        result = response.json()
+                    if result:
+                        st.subheader("Generated Text:")
+                        st.write(result.get("generated_text", "No text generated"))
+                        st.caption(f"⚡ Generated in {response_time:.1f}s")
                         
-                        # Display results
-                        st.subheader("📝 Generated Text")
-                        st.success(result["generated_text"])
-                        
-                        # Show metadata
-                        with st.expander("🔍 API Response Details"):
-                            st.json({
-                                "prompt": result.get("prompt", prompt),
-                                "generated_text": result["generated_text"],
-                                "settings": result.get("settings", {
-                                    "temperature": temperature,
-                                    "max_tokens": max_tokens,
-                                    "top_k": top_k
-                                })
-                            })
-                            
+                        if "tokens_generated" in result:
+                            st.caption(f"Tokens generated: {result['tokens_generated']}")
                     else:
-                        st.error(f"❌ API Error ({response.status_code}): {response.text}")
-                        
-                except requests.exceptions.RequestException as e:
-                    st.error(f"❌ Connection Error: {str(e)}")
-                except Exception as e:
-                    st.error(f"❌ Unexpected Error: {str(e)}")
+                        st.error(f"❌ {error}")
+            else:
+                st.warning("Please enter a prompt")
+        
+        # Show help text when disabled
+        if buttons_disabled:
+            st.caption("🔄 Buttons will be enabled once models finish warming up")
     
-    # Attention Visualization Tab
-    with tabs[1]:
-        st.header("🧠 Attention Visualization")
+    # Attention Visualization Section  
+    with col2:
+        st.header("👁️ Attention Visualization")
+        st.markdown("Visualize transformer attention patterns")
         
-        viz_text = st.text_area("Enter text to visualize attention", 
-                               "The quick brown fox jumps over the lazy dog.", 
-                               height=100)
+        text_input = st.text_area(
+            "Enter text to analyze:", 
+            value="Hello world, this is a test",
+            height=100,
+            disabled=buttons_disabled
+        )
         
-        col1, col2 = st.columns([1, 4])
-        with col1:
-            visualize_btn = st.button("🎨 Visualize", type="primary")
+        col2a, col2b = st.columns(2)
+        with col2a:
+            layer = st.selectbox(
+                "Layer:", 
+                options=list(range(4)), 
+                index=0,
+                disabled=buttons_disabled
+            )
+        with col2b:
+            head = st.selectbox(
+                "Attention Head:", 
+                options=list(range(8)), 
+                index=0,
+                disabled=buttons_disabled
+            )
         
-        if visualize_btn:
-            with st.spinner("Generating attention heatmap..."):
-                try:
-                    # Call the visualize API
-                    response = requests.post(
-                        f"{API_ENDPOINT}/visualize",
-                        json={
-                            "text": viz_text,
-                            "layer": layer,
-                            "head": head
-                        },
-                        headers={"Content-Type": "application/json"}
-                    )
+        # Button with conditional styling and disabled state
+        button_text = "⏳ Warming Up..." if buttons_disabled else "🔍 Visualize Attention"
+        
+        if st.button(button_text, type="primary", disabled=buttons_disabled, key="viz_button"):
+            if text_input.strip():
+                with st.spinner("Creating attention visualization..."):
+                    start_time = time.time()
+                    payload = {"text": text_input, "layer": layer, "head": head}
+                    result, error = call_api(VISUALIZE_ENDPOINT, payload)
+                    response_time = time.time() - start_time
                     
-                    if response.status_code == 200:
-                        result = response.json()
+                    if result and result.get("attention_image"):
+                        st.subheader("Attention Heatmap:")
                         
-                        # Display tokens
-                        st.subheader("🏷️ Tokens")
-                        if "tokens" in result:
-                            token_display = " | ".join(result["tokens"])
-                            st.code(token_display)
-                        
-                        # Display attention visualization
-                        st.subheader(f"🎯 Attention Heatmap (Layer {layer}, Head {head})")
-                        
-                        if "attention_image" in result:
+                        try:
                             # Decode base64 image
                             image_data = base64.b64decode(result["attention_image"])
                             image = Image.open(BytesIO(image_data))
+                            
+                            # Display image with response time
                             st.image(image, use_container_width=True)
-
-                            # Explanation
-                            st.subheader("💡 What am I looking at?")
-                            st.markdown("""
-                            This heatmap shows attention patterns of the transformer model:
+                            st.caption(f"⚡ Visualization created in {response_time:.1f}s")
                             
-                            - **Rows (Query)**: Token that is "asking" for information
-                            - **Columns (Key)**: Token that provides information  
-                            - **Brightness**: How much attention is paid between tokens
-                            - **Multiple heads**: Each head learns different relationship patterns
-                            
-                            🔍 **Try different layers and heads** to see how the model processes language at different levels!
-                            """)
-                        else:
-                            st.warning("⚠️ No attention image returned from API")
-                            
-                        # Show API response details
-                        with st.expander("🔍 API Response Details"):
-                            response_data = {k: v for k, v in result.items() if k != "attention_image"}
-                            st.json(response_data)
-                            
+                            if "tokens" in result:
+                                st.caption(f"Analyzed tokens: {result['tokens']}")
+                                
+                        except Exception as e:
+                            st.error(f"Error displaying image: {str(e)}")
                     else:
-                        st.error(f"❌ API Error ({response.status_code}): {response.text}")
-                        
-                except requests.exceptions.RequestException as e:
-                    st.error(f"❌ Connection Error: {str(e)}")
-                except Exception as e:
-                    st.error(f"❌ Unexpected Error: {str(e)}")
+                        st.error(f"❌ {error or 'No visualization generated'}")
+            else:
+                st.warning("Please enter text to analyze")
+        
+        # Show help text when disabled
+        if buttons_disabled:
+            st.caption("🔄 Buttons will be enabled once models finish warming up")
     
-    # Model Architecture Tab
-    with tabs[2]:
-        st.header("🏗️ Model Architecture")
-        
-        st.subheader("🤖 Transformer Architecture")
-        st.markdown("""
-        This transformer model implements the core concepts from "Attention is All You Need":
-        
-        **📊 Model Specifications:**
-        - **Vocabulary**: ~7,100 tokens
-        - **Layers**: 4 transformer encoder layers
-        - **Attention Heads**: 8 heads per layer
-        - **Hidden Dimension**: 256 
-        - **Feed-Forward**: 1,024 dimensions
-        - **Max Sequence**: 128 tokens
-        
-        **🔧 Key Components:**
-        1. **Token Embeddings** → Convert words to vectors
-        2. **Positional Encoding** → Add position information
-        3. **Multi-Head Attention** → Learn token relationships
-        4. **Feed-Forward Networks** → Process representations
-        5. **Layer Normalization** → Stabilize training
-        6. **Residual Connections** → Enable deep networks
-        """)
-        
-        st.subheader("🧠 Self-Attention Mechanism")
-        st.markdown("""
-        The heart of the transformer:
-        
-        ```
-        Attention(Q, K, V) = softmax(QK^T / √d_k) × V
-        ```
-        
-        - **Query (Q)**: What each token is looking for
-        - **Key (K)**: What each token offers  
-        - **Value (V)**: The actual information content
-        - **Multi-head**: 8 parallel attention computations
-        """)
-    
-    # AWS Architecture Tab
-    with tabs[3]:
-        st.header("☁️ AWS Architecture")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.subheader("🏗️ Infrastructure Components")
-            st.markdown("""
-            **🔧 Compute:**
-            - **AWS Lambda** (Container-based)
-              - 1024MB memory
-              - 30s timeout
-              - PyTorch + custom model
-            
-            **🌐 API Layer:**
-            - **API Gateway** (REST API)
-              - `/generate` endpoint
-              - `/visualize` endpoint  
-              - CORS enabled
-            
-            **💾 Storage:**
-            - **Amazon S3** 
-              - Model weights (`transformer_model.pt`)
-              - Tokenizer (`tokenizer.json`)
-            
-            **📊 Monitoring:**
-            - **CloudWatch** logs & metrics
-            - Error tracking & alerting
-            """)
-        
-        with col2:
-            st.subheader("🚀 Deployment Details")
-            st.markdown("""
-            **📦 Containerization:**
-            - Docker images in ECR
-            - PyTorch CPU-optimized
-            - ~1GB compressed size
-            
-            **🔄 Infrastructure as Code:**
-            - Terraform for provisioning
-            - Modular architecture
-            - Reproducible deployments
-            
-            **⚡ Performance:**
-            - Cold start: ~8-10 seconds
-            - Warm execution: ~1-3 seconds
-            - Auto-scaling based on demand
-            
-            **💰 Cost Optimization:**
-            - Pay-per-request model
-            - No idle compute costs
-            - Efficient for demo workloads
-            """)
-        
-        st.subheader("📈 Success Metrics")
-        
-        # Create some mock metrics for display
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.metric("✅ API Status", "Online", "100%")
-        with col2:
-            st.metric("⚡ Avg Response", "2.1s", "-0.3s")
-        with col3:
-            st.metric("🎯 Success Rate", "99.5%", "+0.2%")
-        with col4:
-            st.metric("📊 Requests Today", "47", "+12")
+    # Footer
+    st.markdown("---")
+    st.markdown("""
+    <div style='text-align: center; color: #666;'>
+        <p>Built with Streamlit • Models hosted on AWS Lambda • Infrastructure managed with Terraform</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-if __name__ == "__main__":
-    main()
+# Main app logic
+if page == "🏠 Main Demo":
+    main_demo()
+elif page == "🔍 Monitoring Dashboard":
+    main_monitoring()
