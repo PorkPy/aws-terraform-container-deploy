@@ -26,7 +26,7 @@ page = st.sidebar.selectbox(
 )
 
 # API Configuration
-API_BASE_URL = "https://your-api-gateway-url"  # Replace with your actual API Gateway URL
+API_BASE_URL = "https://0fc0dgwg69.execute-api.eu-west-2.amazonaws.com"
 GENERATE_ENDPOINT = f"{API_BASE_URL}/generate-text"
 VISUALIZE_ENDPOINT = f"{API_BASE_URL}/visualize-attention"
 
