@@ -27,8 +27,8 @@ page = st.sidebar.selectbox(
 
 # API Configuration
 API_BASE_URL = "https://0fc0dgwg69.execute-api.eu-west-2.amazonaws.com"
-GENERATE_ENDPOINT = f"{API_BASE_URL}/generate"        # Changed from /generate-text
-VISUALIZE_ENDPOINT = f"{API_BASE_URL}/visualize"      # Changed from /visualize-attention
+GENERATE_ENDPOINT = f"{API_BASE_URL}/generate"        # Fixed: was /generate-text
+VISUALIZE_ENDPOINT = f"{API_BASE_URL}/visualize"      # Fixed: was /visualize-attention
 
 def warm_up_lambdas():
     """Warm up both Lambda functions"""
