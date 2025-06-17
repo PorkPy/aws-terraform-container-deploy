@@ -4,6 +4,13 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import time
+import os
+st.write("DEBUG - AWS Environment Variables:")
+st.write(f"AWS_ACCESS_KEY_ID: {os.environ.get('AWS_ACCESS_KEY_ID', 'NOT FOUND')[:10]}...")
+st.write(f"AWS_SECRET_ACCESS_KEY: {os.environ.get('AWS_SECRET_ACCESS_KEY', 'NOT FOUND')[:10]}...")
+st.write(f"AWS_DEFAULT_REGION: {os.environ.get('AWS_DEFAULT_REGION', 'NOT FOUND')}")
+
+
 
 # AWS Configuration
 AWS_REGION = "eu-west-2"
@@ -11,6 +18,15 @@ FUNCTION_NAMES = [
     "transformer-model-generate-text-q3ukv7",
     "transformer-model-visualize-attention-q3ukv7"
 ]
+
+try:
+    import boto3
+    client = boto3.client('lambda', region_name='eu-west-2')
+    response = client.list_functions(MaxItems=1)
+    st.success("AWS credentials work!")
+except Exception as e:
+    st.error(f"AWS error: {str(e)}")
+
 
 def get_aws_client(service):
     """Get AWS client with error handling"""
