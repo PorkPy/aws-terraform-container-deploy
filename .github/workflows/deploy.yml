@@ -47,8 +47,8 @@ jobs:
     if: |
       needs.detect-changes.outputs.lambda-generate == 'true' || 
       needs.detect-changes.outputs.shared-model == 'true' ||
-      github.event.inputs.action == 'deploy' ||
-      (github.event.inputs.action == '' && github.event_name == 'push')
+      github.event.inputs.action == 'deploy'
+      
     steps:
       - uses: actions/checkout@v4
       
