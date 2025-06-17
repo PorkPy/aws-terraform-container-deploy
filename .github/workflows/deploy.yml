@@ -16,124 +16,233 @@ on:
         - plan
 
 jobs:
-  deploy:
+  # Detect which parts of the codebase changed
+  detect-changes:
     runs-on: ubuntu-latest
-    
+    outputs:
+      terraform: ${{ steps.changes.outputs.terraform }}
+      lambda-generate: ${{ steps.changes.outputs.lambda-generate }}
+      lambda-visualize: ${{ steps.changes.outputs.lambda-visualize }}
+      shared-model: ${{ steps.changes.outputs.shared-model }}
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Free up disk space
-      run: |
-        echo "Available space before cleanup:"
-        df -h
-        sudo rm -rf /usr/share/dotnet
-        sudo rm -rf /opt/ghc
-        sudo rm -rf "/usr/local/share/boost"
-        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-        sudo apt-get autoremove -y
-        sudo apt-get clean
-        docker system prune -af --volumes
-        echo "Available space after cleanup:"
-        df -h
-    
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
-    
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: eu-west-2
-    
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v2
-    
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
-      with:
-        terraform_version: 1.5.0
-    
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install boto3
-    
-    - name: Terraform Init
-      run: |
-        cd terraform
-        terraform init
-    
-    - name: Terraform Plan
-      if: github.event.inputs.action == 'plan'
-      run: |
-        cd terraform
-        terraform plan
-    
-    - name: Build and Push Docker Images to ECR
-      if: github.event.inputs.action == 'deploy' || github.event.inputs.action == '' || github.event_name == 'push'
-      env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        IMAGE_TAG: ${{ github.sha }}
-      run: |
-        cd terraform
-        
-        # Get repository names from Terraform outputs (ECR repos should already exist)
-        GENERATE_REPO=$(terraform output -raw generate_text_repository_name)
-        VISUALIZE_REPO=$(terraform output -raw visualize_attention_repository_name)
-        
-        # Get AWS account info
-        ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-        REGION="eu-west-2"
-        
-        # Clean up Docker before builds
-        docker system prune -f
-        
-        # Build and push visualize_attention
-        echo "Building visualize_attention function..."
-        cd ../src/lambda_functions/visualize_attention
-        docker build --no-cache -t $VISUALIZE_REPO .
-        docker tag $VISUALIZE_REPO:latest $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$VISUALIZE_REPO:latest
-        docker push $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$VISUALIZE_REPO:latest
-        
-        # Clean up after first build to save space
-        docker rmi $VISUALIZE_REPO:latest || true
-        docker system prune -f
-        
-        # Build and push generate_text
-        echo "Building generate_text function..."
-        cd ../generate_text
-        docker build --no-cache -t $GENERATE_REPO .
-        docker tag $GENERATE_REPO:latest $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$GENERATE_REPO:latest
-        docker push $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$GENERATE_REPO:latest
-        
-        # Final cleanup
-        docker system prune -af --volumes
-    
-    - name: Apply Terraform Changes - Deploy Infrastructure & Update Lambda Functions
-      if: github.event.inputs.action == 'deploy' || github.event.inputs.action == '' || github.event_name == 'push'
-      run: |
-        cd terraform
-        # Apply all Terraform changes including:
-        # - Lambda function configuration (timeout, memory)
-        # - Lambda function code (image URIs)
-        # - API Gateway changes
-        # - Any other infrastructure updates
-        terraform apply -auto-approve
-    
-    - name: Terraform Destroy
-      if: github.event.inputs.action == 'destroy'
-      run: |
-        cd terraform
-        terraform destroy -auto-approve
-    
-    - name: Output Results
-      if: github.event.inputs.action == 'deploy' || github.event.inputs.action == '' || github.event_name == 'push'
-      run: |
-        cd terraform
-        echo "Deployment complete!"
-        echo "API Endpoint: $(terraform output -raw api_endpoint)"
-        echo "S3 Bucket: $(terraform output -raw model_bucket_name)"
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            terraform:
+              - 'terraform/**'
+              - '.github/workflows/deploy.yml'
+            lambda-generate:
+              - 'src/lambda_functions/generate_text/**'
+            lambda-visualize:
+              - 'src/lambda_functions/visualize_attention/**'
+            shared-model:
+              - 'src/model/**'
+
+  # Build generate_text Docker image (only when code changes)
+  build-generate:
+    needs: detect-changes
+    runs-on: ubuntu-latest
+    if: |
+      needs.detect-changes.outputs.lambda-generate == 'true' || 
+      needs.detect-changes.outputs.shared-model == 'true' ||
+      github.event.inputs.action == 'deploy' ||
+      (github.event.inputs.action == '' && github.event_name == 'push')
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Free up disk space
+        run: |
+          echo "Available space before cleanup:"
+          df -h
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          sudo apt-get autoremove -y
+          sudo apt-get clean
+          docker system prune -af --volumes
+          echo "Available space after cleanup:"
+          df -h
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-2
+      
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      
+      - name: Setup Terraform (to get ECR repo name)
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0
+      
+      - name: Terraform Init
+        run: |
+          cd terraform
+          terraform init
+      
+      - name: Build and Push generate_text Docker Image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          cd terraform
+          GENERATE_REPO=$(terraform output -raw generate_text_repository_name)
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          REGION="eu-west-2"
+          
+          echo "Building generate_text function..."
+          cd ../src/lambda_functions/generate_text
+          docker build --no-cache -t $GENERATE_REPO .
+          docker tag $GENERATE_REPO:latest $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$GENERATE_REPO:latest
+          docker push $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$GENERATE_REPO:latest
+          
+          docker system prune -af --volumes
+
+  # Build visualize_attention Docker image (only when code changes)
+  build-visualize:
+    needs: detect-changes
+    runs-on: ubuntu-latest
+    if: |
+      needs.detect-changes.outputs.lambda-visualize == 'true' || 
+      needs.detect-changes.outputs.shared-model == 'true' ||
+      github.event.inputs.action == 'deploy' ||
+      (github.event.inputs.action == '' && github.event_name == 'push')
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Free up disk space
+        run: |
+          echo "Available space before cleanup:"
+          df -h
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          sudo apt-get autoremove -y
+          sudo apt-get clean
+          docker system prune -af --volumes
+          echo "Available space after cleanup:"
+          df -h
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-2
+      
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      
+      - name: Setup Terraform (to get ECR repo name)
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0
+      
+      - name: Terraform Init
+        run: |
+          cd terraform
+          terraform init
+      
+      - name: Build and Push visualize_attention Docker Image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          cd terraform
+          VISUALIZE_REPO=$(terraform output -raw visualize_attention_repository_name)
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          REGION="eu-west-2"
+          
+          echo "Building visualize_attention function..."
+          cd ../src/lambda_functions/visualize_attention
+          docker build --no-cache -t $VISUALIZE_REPO .
+          docker tag $VISUALIZE_REPO:latest $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$VISUALIZE_REPO:latest
+          docker push $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$VISUALIZE_REPO:latest
+          
+          docker system prune -af --volumes
+
+  # Deploy infrastructure and update Lambda functions
+  terraform:
+    needs: [detect-changes, build-generate, build-visualize]
+    runs-on: ubuntu-latest
+    if: |
+      always() && (
+        needs.detect-changes.outputs.terraform == 'true' ||
+        needs.detect-changes.outputs.lambda-generate == 'true' ||
+        needs.detect-changes.outputs.lambda-visualize == 'true' ||
+        needs.detect-changes.outputs.shared-model == 'true' ||
+        github.event.inputs.action == 'deploy' ||
+        github.event.inputs.action == 'destroy' ||
+        github.event.inputs.action == 'plan' ||
+        (github.event.inputs.action == '' && github.event_name == 'push')
+      )
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-2
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install boto3
+      
+      - name: Terraform Init
+        run: |
+          cd terraform
+          terraform init
+      
+      - name: Terraform Plan
+        if: github.event.inputs.action == 'plan'
+        run: |
+          cd terraform
+          terraform plan
+      
+      - name: Apply Terraform Changes - Deploy Infrastructure & Update Lambda Functions
+        if: |
+          github.event.inputs.action == 'deploy' || 
+          github.event.inputs.action == '' || 
+          github.event_name == 'push'
+        run: |
+          cd terraform
+          terraform apply -auto-approve
+      
+      - name: Terraform Destroy
+        if: github.event.inputs.action == 'destroy'
+        run: |
+          cd terraform
+          terraform destroy -auto-approve
+      
+      - name: Output Results
+        if: |
+          github.event.inputs.action == 'deploy' || 
+          github.event.inputs.action == '' || 
+          github.event_name == 'push'
+        run: |
+          cd terraform
+          echo "Deployment complete!"
+          echo "API Endpoint: $(terraform output -raw api_endpoint)"
+          echo "S3 Bucket: $(terraform output -raw model_bucket_name)"
