@@ -345,33 +345,292 @@ def display_recent_logs():
             else:
                 st.info("No logs available")
 
-def display_cost_monitoring():
-    """Display cost monitoring estimates"""
-    st.header("💰 Cost Monitoring")
+def get_cost_data():
+    """Get AWS cost data for current and previous month"""
+    cost_client = get_aws_client('ce')  # Cost Explorer
+    if not cost_client:
+        # Return demo cost data
+        import random
+        current_month_costs = {
+            'AWS Lambda': round(random.uniform(2.50, 8.30), 2),
+            'Amazon API Gateway': round(random.uniform(0.15, 0.45), 2),
+            'Amazon S3': round(random.uniform(0.05, 0.25), 2),
+            'Amazon CloudWatch': round(random.uniform(0.10, 0.35), 2),
+            'Amazon ECR': round(random.uniform(0.02, 0.08), 2),
+            'AWS Key Management Service': round(random.uniform(0.01, 0.03), 2)
+        }
+        
+        previous_month_costs = {
+            service: round(cost * random.uniform(0.7, 1.3), 2) 
+            for service, cost in current_month_costs.items()
+        }
+        
+        return {
+            'current_month': current_month_costs,
+            'previous_month': previous_month_costs,
+            'total_current': sum(current_month_costs.values()),
+            'total_previous': sum(previous_month_costs.values())
+        }
     
-    st.info("💡 **Cost Optimization Tips:**")
-    col1, col2 = st.columns(2)
+    try:
+        from datetime import datetime, timedelta
+        import calendar
+        
+        # Get current month dates
+        now = datetime.now()
+        current_month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        current_month_end = now
+        
+        # Get previous month dates
+        if current_month_start.month == 1:
+            prev_month_start = current_month_start.replace(year=current_month_start.year - 1, month=12)
+        else:
+            prev_month_start = current_month_start.replace(month=current_month_start.month - 1)
+        
+        prev_month_end = current_month_start - timedelta(days=1)
+        
+        # Get current month costs
+        current_response = cost_client.get_cost_and_usage(
+            TimePeriod={
+                'Start': current_month_start.strftime('%Y-%m-%d'),
+                'End': current_month_end.strftime('%Y-%m-%d')
+            },
+            Granularity='MONTHLY',
+            Metrics=['BlendedCost'],
+            GroupBy=[{'Type': 'DIMENSION', 'Key': 'SERVICE'}]
+        )
+        
+        # Get previous month costs
+        previous_response = cost_client.get_cost_and_usage(
+            TimePeriod={
+                'Start': prev_month_start.strftime('%Y-%m-%d'),
+                'End': prev_month_end.strftime('%Y-%m-%d')
+            },
+            Granularity='MONTHLY',
+            Metrics=['BlendedCost'],
+            GroupBy=[{'Type': 'DIMENSION', 'Key': 'SERVICE'}]
+        )
+        
+        def parse_costs(response):
+            costs = {}
+            if response['ResultsByTime']:
+                for group in response['ResultsByTime'][0]['Groups']:
+                    service = group['Keys'][0]
+                    amount = float(group['Metrics']['BlendedCost']['Amount'])
+                    if amount > 0:  # Only include services with actual costs
+                        costs[service] = round(amount, 2)
+            return costs
+        
+        current_costs = parse_costs(current_response)
+        previous_costs = parse_costs(previous_response)
+        
+        return {
+            'current_month': current_costs,
+            'previous_month': previous_costs,
+            'total_current': sum(current_costs.values()),
+            'total_previous': sum(previous_costs.values())
+        }
+        
+    except Exception as e:
+        st.error(f"Error fetching cost data: {str(e)}")
+        return None
+
+def display_cost_analysis():
+    """Display comprehensive cost analysis"""
+    st.header("💰 AWS Cost Analysis")
+    
+    cost_data = get_cost_data()
+    if not cost_data:
+        st.warning("Unable to fetch cost data")
+        return
+    
+    # Check if this is demo data
+    cost_client = get_aws_client('ce')
+    if not cost_client:
+        st.info("📍 **Demo Mode**: Showing sample cost data (AWS credentials not configured)")
+    
+    # Top-level metrics
+    col1, col2, col3, col4 = st.columns(4)
+    
+    total_current = cost_data['total_current']
+    total_previous = cost_data['total_previous']
+    cost_change = total_current - total_previous
+    cost_change_pct = (cost_change / total_previous * 100) if total_previous > 0 else 0
     
     with col1:
-        st.markdown("""
-        **Current Configuration:**
-        - Memory: 3008 MB
-        - Timeout: 900 seconds
-        - Reserved Concurrency: 1
-        
-        **Estimated Costs:**
-        - ~$0.20 per 1000 invocations
-        - ~$0.0167 per GB-second
-        """)
+        st.metric("Current Month", f"${total_current:.2f}")
     
     with col2:
-        st.markdown("""
-        **Optimization Opportunities:**
-        - Monitor cold start frequency
-        - Adjust memory based on actual usage
-        - Consider provisioned concurrency for production
-        - Implement caching strategies
-        """)
+        st.metric("Previous Month", f"${total_previous:.2f}")
+    
+    with col3:
+        delta_color = "normal" if cost_change >= 0 else "inverse"
+        st.metric("Month Change", f"${cost_change:+.2f}", delta=f"{cost_change_pct:+.1f}%")
+    
+    with col4:
+        # Projected monthly cost based on current daily average
+        from datetime import datetime
+        days_elapsed = datetime.now().day
+        daily_average = total_current / days_elapsed if days_elapsed > 0 else 0
+        days_in_month = 30  # Approximate
+        projected = daily_average * days_in_month
+        st.metric("Projected Month", f"${projected:.2f}")
+    
+    st.markdown("---")
+    
+    # Service breakdown tabs
+    tab1, tab2, tab3 = st.tabs(["Service Breakdown", "Cost Comparison", "Trends"])
+    
+    with tab1:
+        st.subheader("Current Month Costs by Service")
+        
+        if cost_data['current_month']:
+            # Create DataFrame for better display
+            service_costs = []
+            for service, cost in sorted(cost_data['current_month'].items(), key=lambda x: x[1], reverse=True):
+                percentage = (cost / total_current * 100) if total_current > 0 else 0
+                service_costs.append({
+                    'Service': service,
+                    'Cost': f"${cost:.2f}",
+                    'Percentage': f"{percentage:.1f}%"
+                })
+            
+            df = pd.DataFrame(service_costs)
+            st.dataframe(df, use_container_width=True, hide_index=True)
+            
+            # Pie chart
+            fig_pie = px.pie(
+                values=list(cost_data['current_month'].values()),
+                names=list(cost_data['current_month'].keys()),
+                title="Cost Distribution by Service"
+            )
+            st.plotly_chart(fig_pie, use_container_width=True)
+        else:
+            st.info("No cost data available for current month")
+    
+    with tab2:
+        st.subheader("Month-over-Month Comparison")
+        
+        # Prepare comparison data
+        all_services = set(cost_data['current_month'].keys()) | set(cost_data['previous_month'].keys())
+        comparison_data = []
+        
+        for service in all_services:
+            current = cost_data['current_month'].get(service, 0)
+            previous = cost_data['previous_month'].get(service, 0)
+            change = current - previous
+            change_pct = (change / previous * 100) if previous > 0 else (100 if current > 0 else 0)
+            
+            comparison_data.append({
+                'Service': service,
+                'Current': current,
+                'Previous': previous,
+                'Change': change,
+                'Change_Pct': change_pct
+            })
+        
+        if comparison_data:
+            df_comparison = pd.DataFrame(comparison_data)
+            df_comparison = df_comparison.sort_values('Current', ascending=False)
+            
+            # Bar chart comparison
+            fig_bar = go.Figure()
+            fig_bar.add_trace(go.Bar(
+                name='Current Month',
+                x=df_comparison['Service'],
+                y=df_comparison['Current'],
+                marker_color='lightblue'
+            ))
+            fig_bar.add_trace(go.Bar(
+                name='Previous Month',
+                x=df_comparison['Service'],
+                y=df_comparison['Previous'],
+                marker_color='lightcoral'
+            ))
+            
+            fig_bar.update_layout(
+                title='Monthly Cost Comparison by Service',
+                xaxis_title='Service',
+                yaxis_title='Cost ($)',
+                barmode='group'
+            )
+            st.plotly_chart(fig_bar, use_container_width=True)
+            
+            # Detailed comparison table
+            display_comparison = []
+            for _, row in df_comparison.iterrows():
+                display_comparison.append({
+                    'Service': row['Service'],
+                    'Current': f"${row['Current']:.2f}",
+                    'Previous': f"${row['Previous']:.2f}",
+                    'Change': f"${row['Change']:+.2f}",
+                    'Change %': f"{row['Change_Pct']:+.1f}%"
+                })
+            
+            df_display = pd.DataFrame(display_comparison)
+            st.dataframe(df_display, use_container_width=True, hide_index=True)
+    
+    with tab3:
+        st.subheader("Cost Trends & Insights")
+        
+        # Cost efficiency metrics
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("""
+            **💡 Cost Optimization Insights:**
+            
+            🔍 **Top Cost Drivers:**
+            """)
+            
+            # Show top 3 services by cost
+            top_services = sorted(cost_data['current_month'].items(), key=lambda x: x[1], reverse=True)[:3]
+            for i, (service, cost) in enumerate(top_services, 1):
+                percentage = (cost / total_current * 100) if total_current > 0 else 0
+                st.write(f"{i}. **{service}**: ${cost:.2f} ({percentage:.1f}%)")
+        
+        with col2:
+            st.markdown("""
+            **📈 Growth Analysis:**
+            """)
+            
+            if cost_change_pct > 10:
+                st.warning(f"⚠️ Costs increased by {cost_change_pct:.1f}% this month")
+            elif cost_change_pct > 0:
+                st.info(f"📊 Costs increased by {cost_change_pct:.1f}% this month")
+            else:
+                st.success(f"✅ Costs decreased by {abs(cost_change_pct):.1f}% this month")
+            
+            # Daily burn rate
+            days_elapsed = datetime.now().day
+            daily_rate = total_current / days_elapsed if days_elapsed > 0 else 0
+            st.metric("Daily Burn Rate", f"${daily_rate:.2f}")
+        
+        # Cost predictions and recommendations
+        st.markdown("---")
+        st.markdown("**🎯 Recommendations:**")
+        
+        recommendations = []
+        
+        # Lambda-specific recommendations
+        lambda_cost = cost_data['current_month'].get('AWS Lambda', 0)
+        if lambda_cost > 5:
+            recommendations.append("Consider optimizing Lambda memory allocation and execution time")
+        
+        # API Gateway recommendations
+        api_cost = cost_data['current_month'].get('Amazon API Gateway', 0)
+        if api_cost > 1:
+            recommendations.append("Monitor API Gateway request patterns for optimization opportunities")
+        
+        # General recommendations
+        if total_current > 10:
+            recommendations.append("Set up AWS Budgets and alerts for cost monitoring")
+        
+        if not recommendations:
+            recommendations.append("Costs are well-optimized for current usage patterns")
+        
+        for rec in recommendations:
+            st.write(f"• {rec}")
 
 def main_monitoring():
     """Main monitoring dashboard"""
@@ -404,7 +663,7 @@ def main_monitoring():
     display_recent_logs()
     st.markdown("---")
     
-    display_cost_monitoring()
+    display_cost_analysis()
     
     # Footer
     st.markdown("---")
