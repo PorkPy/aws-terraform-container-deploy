@@ -5,12 +5,6 @@ import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import time
 import os
-st.write("DEBUG - AWS Environment Variables:")
-st.write(f"AWS_ACCESS_KEY_ID: {os.environ.get('AWS_ACCESS_KEY_ID', 'NOT FOUND')[:10]}...")
-st.write(f"AWS_SECRET_ACCESS_KEY: {os.environ.get('AWS_SECRET_ACCESS_KEY', 'NOT FOUND')[:10]}...")
-st.write(f"AWS_DEFAULT_REGION: {os.environ.get('AWS_DEFAULT_REGION', 'NOT FOUND')}")
-
-
 
 # AWS Configuration
 AWS_REGION = "eu-west-2"
@@ -634,6 +628,12 @@ def display_cost_analysis():
 
 def main_monitoring():
     """Main monitoring dashboard"""
+
+    st.write("DEBUG - AWS Environment Variables:")
+    st.write(f"AWS_ACCESS_KEY_ID: {os.environ.get('AWS_ACCESS_KEY_ID', 'NOT FOUND')[:10]}...")
+    st.write(f"AWS_SECRET_ACCESS_KEY: {os.environ.get('AWS_SECRET_ACCESS_KEY', 'NOT FOUND')[:10]}...")
+    st.write(f"AWS_DEFAULT_REGION: {os.environ.get('AWS_DEFAULT_REGION', 'NOT FOUND')}")
+
     st.title("🔍 AWS Lambda Monitoring Dashboard")
     st.markdown("*Real-time monitoring of transformer model infrastructure*")
     st.markdown("---")
