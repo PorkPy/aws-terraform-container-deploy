@@ -12,7 +12,7 @@ from monitoring_dashboard import main_monitoring
 
 # Page config
 st.set_page_config(
-    page_title="Transformer Model Demo",
+    page_title="Custom ML Model Production",
     page_icon="🤖",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -23,11 +23,6 @@ st.markdown("""
 <style>
 .sidebar .sidebar-content {
     background: linear-gradient(180deg, #1e3c72 0%, #2a5298 100%);
-}
-
-.stSelectbox > div > div {
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
 }
 
 .main-header {
@@ -54,27 +49,59 @@ st.markdown("""
     text-align: center;
     margin: 0.5rem;
 }
+
+.nav-button {
+    display: block;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    margin: 0.25rem 0;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.nav-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateX(5px);
+}
+
+.nav-button.active {
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    font-weight: bold;
+}
 </style>
 """, unsafe_allow_html=True)
 
-# Modern sidebar navigation
-st.sidebar.markdown("# 🤖 **Transformer Demo**")
+# Modern sidebar navigation with buttons
+st.sidebar.markdown("# 🤖 **Custom ML Production**")
 st.sidebar.markdown("---")
 
-page = st.sidebar.selectbox(
-    "**Navigate to:**",
-    [
-        "🏠 Home & Overview",
-        "🚀 Text Generation", 
-        "👁️ Attention Visualization",
-        "🔍 System Monitoring"
-    ],
-    key="main_navigation"
-)
+# Initialize session state for navigation
+if 'current_page' not in st.session_state:
+    st.session_state.current_page = "🏠 Home & Overview"
+
+# Navigation buttons
+nav_options = [
+    "🏠 Home & Overview",
+    "🚀 Text Generation", 
+    "👁️ Attention Visualisation",
+    "🔍 System Monitoring"
+]
+
+st.sidebar.markdown("**Navigate to:**")
+for option in nav_options:
+    button_class = "nav-button active" if st.session_state.current_page == option else "nav-button"
+    if st.sidebar.button(option, key=f"nav_{option}", use_container_width=True):
+        st.session_state.current_page = option
+        st.rerun()
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("""
-<div style='text-align: center; color: #888; font-size: 0.8rem;'>
+<div style='text-align: center; colour: #888; font-size: 0.8rem;'>
     <p>Built with Streamlit<br>
     Powered by AWS Lambda<br>
     Infrastructure as Code</p>
@@ -84,13 +111,16 @@ st.sidebar.markdown("""
 # API Configuration
 API_BASE_URL = "https://0fc0dgwg69.execute-api.eu-west-2.amazonaws.com"
 GENERATE_ENDPOINT = f"{API_BASE_URL}/generate"
-VISUALIZE_ENDPOINT = f"{API_BASE_URL}/visualize"
+VISUALISE_ENDPOINT = f"{API_BASE_URL}/visualize"
+
+# S3 URLs for diagrams
+ASSETS_BASE_URL = "https://your-bucket-name.s3.amazonaws.com/static-assets/"
 
 def warm_up_lambdas():
     """Warm up both Lambda functions"""
     endpoints = [
         {"url": GENERATE_ENDPOINT, "payload": {"prompt": "warmup", "max_length": 10}},
-        {"url": VISUALIZE_ENDPOINT, "payload": {"text": "warmup", "layer": 0, "head": 0}}
+        {"url": VISUALISE_ENDPOINT, "payload": {"text": "warmup", "layer": 0, "head": 0}}
     ]
     
     for endpoint in endpoints:
@@ -155,57 +185,86 @@ def show_home_page():
     """Home page with project overview"""
     st.markdown("""
     <div class="main-header">
-        <h1>🤖 Custom Transformer Model Showcase</h1>
-        <p>End-to-end machine learning pipeline hosted on AWS serverless infrastructure</p>
+        <h1>Custom ML Model Productionisation</h1>
+        <p>Complete end-to-end machine learning pipeline automated on GitHub using Terraform IaC and hosted on AWS serverless infrastructure feeding a Streamlit app front-end</p>
     </div>
     """, unsafe_allow_html=True)
     
     # Project Overview
     st.header("📋 Project Overview")
     
+    st.markdown("""
+    This project demonstrates a **complete machine learning production pipeline** showcasing the full journey from model development to scalable deployment. 
+    
+    At its core is a **custom transformer language model trained from scratch** using only Jane Austen's "Pride and Prejudice" as the training corpus. 
+    Whilst this creates a deliberately limited vocabulary model, it serves as an ideal demonstration piece showing that I can:
+    
+    - **Build neural networks from first principles** - implementing transformer architecture, attention mechanisms, and training loops
+    - **Deploy models at scale** - containerising PyTorch models and orchestrating AWS infrastructure 
+    - **Automate entire pipelines** - from code push through GitHub Actions to live AWS deployment
+    - **Optimise for cost and performance** - using serverless architecture with real-time monitoring
+    
+    The emphasis here isn't on creating the world's best language model, but rather demonstrating **production ML engineering capabilities** 
+    that translate to any model architecture or business domain. The monitoring dashboard shows real AWS costs and performance metrics, 
+    proving this isn't just a toy project but a genuinely deployed production system.
+    """)
+    
+    # Architecture Diagrams
+    st.header("🏗️ System Architecture")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("### 🧠 Custom Transformer Model")
+        st.image(f"{ASSETS_BASE_URL}transformer_architecture.png", 
+                caption="4-layer transformer with 8 attention heads, 256d embeddings",
+                use_container_width=True)
+    
+    with col2:
+        st.markdown("### ☁️ AWS Infrastructure")
+        st.image(f"{ASSETS_BASE_URL}aws_architecture.png", 
+                caption="Serverless infrastructure with Lambda containers, API Gateway, S3",
+                use_container_width=True)
+    
+    st.markdown("### 🔄 Complete ML Pipeline")
+    st.image(f"{ASSETS_BASE_URL}pipeline_diagram.png", 
+            caption="End-to-end automation from GitHub to production deployment",
+            use_container_width=True)
+    
     col1, col2 = st.columns([2, 1])
     
     with col1:
         st.markdown("""
-        This project demonstrates a **complete machine learning pipeline** featuring:
+        ### What You Can Explore:
         
-        - 🧠 **Custom transformer model** trained from scratch
-        - ☁️ **AWS serverless architecture** with Lambda containers
-        - 🔧 **Infrastructure as Code** using Terraform
-        - 📊 **Real-time monitoring** and cost analysis
-        - 🚀 **CI/CD pipeline** with GitHub Actions
+        **🚀 Text Generation**: Generate creative text continuations using the transformer model trained on Pride and Prejudice
         
-        ### What You Can Do:
+        **👁️ Attention Visualisation**: Explore how the model "pays attention" to different words across multiple heads and layers
         
-        **🚀 Text Generation**: Generate creative text continuations using the transformer model
-        
-        **👁️ Attention Visualization**: Explore how the model "pays attention" to different words
-        
-        **🔍 System Monitoring**: View real-time performance metrics and AWS costs
+        **🔍 System Monitoring**: View real-time performance metrics and AWS costs for the production deployment
         """)
     
     with col2:
         st.markdown("""
         <div class="metric-card">
             <h3>⚡ Performance</h3>
-            <p>Sub-second inference</p>
+            <p>Real-time metrics</p>
         </div>
         
         <div class="metric-card">
             <h3>💰 Cost</h3>
-            <p>~$5-10/month</p>
+            <p>Live AWS billing</p>
         </div>
         
         <div class="metric-card">
-            <h3>🔧 Uptime</h3>
-            <p>99.9% available</p>
+            <h3>🔧 Monitoring</h3>
+            <p>CloudWatch integration</p>
         </div>
         """, unsafe_allow_html=True)
     
     st.markdown("---")
     
     # Technical Architecture
-    st.header("🏗️ Technical Architecture")
+    st.header("🏗️ Technical Implementation")
     
     col1, col2, col3 = st.columns(3)
     
@@ -217,7 +276,8 @@ def show_home_page():
                 <li>Custom transformer architecture</li>
                 <li>4 layers, 8 attention heads</li>
                 <li>256-dimensional embeddings</li>
-                <li>Trained on custom dataset</li>
+                <li>Trained on Pride and Prejudice</li>
+                <li>Built with PyTorch from scratch</li>
             </ul>
         </div>
         """, unsafe_allow_html=True)
@@ -231,6 +291,7 @@ def show_home_page():
                 <li>API Gateway endpoints</li>
                 <li>S3 model storage</li>
                 <li>CloudWatch monitoring</li>
+                <li>ECR container registry</li>
             </ul>
         </div>
         """, unsafe_allow_html=True)
@@ -240,45 +301,14 @@ def show_home_page():
         <div class="feature-card">
             <h4>🔧 DevOps Pipeline</h4>
             <ul>
-                <li>Terraform IaC</li>
+                <li>Terraform Infrastructure as Code</li>
                 <li>GitHub Actions CI/CD</li>
-                <li>ECR container registry</li>
                 <li>Automated deployments</li>
+                <li>Change detection</li>
+                <li>Cost optimisation</li>
             </ul>
         </div>
         """, unsafe_allow_html=True)
-    
-    st.markdown("---")
-    
-    # Usage Instructions
-    st.header("📖 How to Use This Demo")
-    
-    instructions = st.expander("**Click here for detailed usage instructions**", expanded=False)
-    with instructions:
-        st.markdown("""
-        ### 🚀 Text Generation
-        1. Navigate to the **Text Generation** page
-        2. Enter a prompt (e.g., "The future of AI is...")
-        3. Adjust the maximum length slider
-        4. Click **Generate Text** to see the model's continuation
-        
-        ### 👁️ Attention Visualization  
-        1. Navigate to the **Attention Visualization** page
-        2. Enter text to analyze
-        3. Select which layer and attention head to visualize
-        4. Click **Visualize Attention** to see the attention heatmap
-        
-        ### 🔍 System Monitoring
-        1. Navigate to the **System Monitoring** page
-        2. View real-time Lambda performance metrics
-        3. Analyze AWS costs and optimization opportunities
-        4. Monitor system health and recent logs
-        
-        ### ⚡ Performance Tips
-        - First requests may take 30 seconds (cold start)
-        - Subsequent requests are sub-second
-        - Try different prompts and attention heads for variety
-        """)
     
     # Model warmup status
     st.markdown("---")
@@ -307,13 +337,13 @@ def show_text_generation_page():
         **Multi-Head Attention**: With 8 attention heads, the model can focus on different types of relationships (syntax, semantics, etc.) in parallel.
         
         ### Training Process
-        1. **Dataset**: Trained on a curated text corpus
+        1. **Dataset**: Trained exclusively on Jane Austen's "Pride and Prejudice"
         2. **Objective**: Learn to predict the next word given previous context
-        3. **Optimization**: Uses the Adam optimizer with learning rate scheduling
+        3. **Optimisation**: Uses the Adam optimiser with learning rate scheduling
         4. **Validation**: Monitored perplexity and generation quality
         
         ### Generation Strategy
-        The model uses **nucleus sampling** (top-p) to balance creativity and coherence in generated text.
+        The model uses configurable sampling strategies (temperature, top-p, top-k) to balance creativity and coherence in generated text.
         """)
     
     st.markdown("---")
@@ -345,12 +375,29 @@ def show_text_generation_page():
             )
             
             temperature = st.slider(
-                "Creativity level:",
+                "Temperature:",
                 min_value=0.1,
                 max_value=2.0,
                 value=0.8,
                 step=0.1,
-                help="Higher values = more creative, lower = more focused"
+                help="Controls randomness: lower = more focused, higher = more creative"
+            )
+            
+            top_p = st.slider(
+                "Top-p (nucleus sampling):",
+                min_value=0.1,
+                max_value=1.0,
+                value=0.9,
+                step=0.05,
+                help="Considers tokens with cumulative probability up to p"
+            )
+            
+            top_k = st.slider(
+                "Top-k sampling:",
+                min_value=1,
+                max_value=100,
+                value=50,
+                help="Consider only the k most likely next tokens"
             )
         
         if st.button("🚀 Generate Text", type="primary", use_container_width=True):
@@ -360,7 +407,9 @@ def show_text_generation_page():
                     payload = {
                         "prompt": prompt,
                         "max_length": max_length,
-                        "temperature": temperature
+                        "temperature": temperature,
+                        "top_p": top_p,
+                        "top_k": top_k
                     }
                     result, error = call_api(GENERATE_ENDPOINT, payload)
                     response_time = time.time() - start_time
@@ -389,11 +438,11 @@ def show_text_generation_page():
             else:
                 st.warning("⚠️ Please enter a prompt")
 
-def show_attention_visualization_page():
-    """Attention visualization page"""
+def show_attention_visualisation_page():
+    """Attention visualisation page"""
     st.markdown("""
     <div class="main-header">
-        <h1>👁️ Attention Visualization</h1>
+        <h1>👁️ Attention Visualisation</h1>
         <p>Explore how the transformer model pays attention to different words</p>
     </div>
     """, unsafe_allow_html=True)
@@ -414,9 +463,9 @@ def show_attention_visualization_page():
         - Others focus on semantics (meaning relationships)
         - Some capture long-range dependencies
         
-        ### Visualization Explained
+        ### Visualisation Explained
         
-        **Heatmap Colors**:
+        **Heatmap Colours**:
         - 🔵 **Blue (Dark)**: High attention - the model is focusing strongly on this connection
         - ⚪ **White/Light**: Low attention - weak or no connection
         
@@ -437,14 +486,14 @@ def show_attention_visualization_page():
     models_ready = check_warmup_status()
     
     if models_ready:
-        # Attention visualization interface
-        st.header("🔍 Visualize Attention")
+        # Attention visualisation interface
+        st.header("🔍 Visualise Attention")
         
         col1, col2 = st.columns([2, 1])
         
         with col1:
             text_input = st.text_area(
-                "Enter text to analyze:",
+                "Enter text to analyse:",
                 value="The cat sat on the mat and looked around",
                 height=100,
                 help="Enter text to see how the model pays attention to different words"
@@ -459,26 +508,38 @@ def show_attention_visualization_page():
                 format_func=lambda x: f"Layer {x+1} {'(Deep)' if x >= 2 else '(Shallow)'}"
             )
             
-            head = st.selectbox(
-                "👁️ Attention Head:",
-                options=list(range(8)),
-                index=0,
-                help="Different heads focus on different relationship types",
-                format_func=lambda x: f"Head {x+1}"
+            # Multi-head selection options
+            head_mode = st.radio(
+                "👁️ Attention Heads:",
+                ["Single Head", "Multiple Heads (2x2)", "All Heads (4x2)"],
+                help="Choose how many attention heads to visualise simultaneously"
             )
             
-            st.info(f"💡 Analyzing **Layer {layer+1}, Head {head+1}**")
+            if head_mode == "Single Head":
+                head = st.selectbox(
+                    "Select Head:",
+                    options=list(range(8)),
+                    index=0,
+                    format_func=lambda x: f"Head {x+1}"
+                )
+                heads_to_show = [head]
+            elif head_mode == "Multiple Heads (2x2)":
+                heads_to_show = [0, 1, 2, 3]  # First 4 heads
+            else:  # All Heads
+                heads_to_show = list(range(8))  # All 8 heads
+            
+            st.info(f"💡 Analysing **Layer {layer+1}**, showing {len(heads_to_show)} head(s)")
         
-        if st.button("🔍 Visualize Attention", type="primary", use_container_width=True):
+        if st.button("🔍 Visualise Attention", type="primary", use_container_width=True):
             if text_input.strip():
-                with st.spinner("🧠 Analyzing attention patterns..."):
+                with st.spinner("🧠 Analysing attention patterns..."):
                     start_time = time.time()
                     payload = {
                         "text": text_input,
                         "layer": layer,
-                        "head": head
+                        "heads": heads_to_show  # Send multiple heads
                     }
-                    result, error = call_api(VISUALIZE_ENDPOINT, payload)
+                    result, error = call_api(VISUALISE_ENDPOINT, payload)
                     response_time = time.time() - start_time
                     
                     if result and result.get("attention_image"):
@@ -490,7 +551,8 @@ def show_attention_visualization_page():
                             image = Image.open(BytesIO(image_data))
                             
                             st.markdown("### 🎨 Attention Heatmap:")
-                            st.image(image, use_container_width=True, caption=f"Attention patterns for Layer {layer+1}, Head {head+1}")
+                            st.image(image, use_container_width=True, 
+                                   caption=f"Attention patterns for Layer {layer+1}, {len(heads_to_show)} head(s)")
                             
                             # Analysis info
                             col1, col2, col3 = st.columns(3)
@@ -498,29 +560,47 @@ def show_attention_visualization_page():
                                 st.metric("⚡ Analysis Time", f"{response_time:.1f}s")
                             with col2:
                                 if "tokens" in result:
-                                    st.metric("🔤 Tokens Analyzed", len(result['tokens']))
+                                    st.metric("🔤 Tokens Analysed", len(result['tokens']))
                             with col3:
-                                st.metric("🎯 Layer/Head", f"{layer+1}/{head+1}")
+                                st.metric("🎯 Layer/Heads", f"{layer+1}/{len(heads_to_show)}")
                             
-                            # Show tokenization
+                            # Show tokenisation with explanation
                             if "tokens" in result:
-                                st.markdown("### 🔤 Tokenization:")
+                                st.markdown("### 🔤 Tokenisation Analysis:")
+                                
+                                # Show tokens
                                 tokens_display = " | ".join(result['tokens'])
                                 st.code(tokens_display, language=None)
                                 
+                                # Explain tokenisation
+                                st.markdown("""
+                                **Understanding the Tokens:**
+                                
+                                - **`<BOS>`**: Beginning of Sequence - marks the start of input
+                                - **`<EOS>`**: End of Sequence - marks the end of input  
+                                - **`<UNK>`**: Unknown Token - words not in the training vocabulary (Pride and Prejudice)
+                                - **Lowercase tokens**: Words that appeared in the training text
+                                
+                                Since this model was trained only on "Pride and Prejudice", modern words like "cat" 
+                                might not be in the vocabulary and get replaced with `<UNK>` tokens. This demonstrates 
+                                the limited but focused nature of the training corpus.
+                                """)
+                                
                         except Exception as e:
-                            st.error(f"Error displaying visualization: {str(e)}")
+                            st.error(f"Error displaying visualisation: {str(e)}")
                     else:
-                        st.error(f"❌ {error or 'No visualization generated'}")
+                        st.error(f"❌ {error or 'No visualisation generated'}")
             else:
-                st.warning("⚠️ Please enter text to analyze")
+                st.warning("⚠️ Please enter text to analyse")
 
 # Main app routing
+page = st.session_state.current_page
+
 if page == "🏠 Home & Overview":
     show_home_page()
 elif page == "🚀 Text Generation":
     show_text_generation_page()
-elif page == "👁️ Attention Visualization":
-    show_attention_visualization_page()
+elif page == "👁️ Attention Visualisation":
+    show_attention_visualisation_page()
 elif page == "🔍 System Monitoring":
     main_monitoring()
