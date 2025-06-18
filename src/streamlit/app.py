@@ -114,7 +114,7 @@ GENERATE_ENDPOINT = f"{API_BASE_URL}/generate"
 VISUALISE_ENDPOINT = f"{API_BASE_URL}/visualize"
 
 # S3 URLs for diagrams
-ASSETS_BASE_URL = "https://your-bucket-name.s3.amazonaws.com/static-assets/"
+ASSETS_BASE_URL = "https://transformer-model-artifacts-q3ukv7.s3.amazonaws.com/static-assets/"
 
 def warm_up_lambdas():
     """Warm up both Lambda functions"""
