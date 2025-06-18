@@ -211,24 +211,88 @@ def show_home_page():
     
     # Architecture Diagrams
     st.header("🏗️ System Architecture")
-    
+
     col1, col2 = st.columns(2)
     with col1:
-        st.markdown("### 🧠 Custom Transformer Model")
-        st.image(f"{ASSETS_BASE_URL}transformer_architecture.png", 
-                caption="4-layer transformer with 8 attention heads, 256d embeddings",
-                use_container_width=True)
-    
+        st.markdown("### 📊 Complete System Overview")
+        st.image(f"{ASSETS_BASE_URL}AWS_1.png", 
+                 caption="Complete AWS serverless infrastructure with all components",
+                 use_container_width=True)
+        
+        st.markdown("""
+        **What you're seeing:** End-to-end system architecture showing how the Streamlit app 
+        connects through API Gateway to Lambda containers, with S3 storage and monitoring. 
+        Perfect for understanding the complete production infrastructure.
+        """)
+
     with col2:
-        st.markdown("### ☁️ AWS Infrastructure")
-        st.image(f"{ASSETS_BASE_URL}aws_architecture.png", 
-                caption="Serverless infrastructure with Lambda containers, API Gateway, S3",
-                use_container_width=True)
-    
-    st.markdown("### 🔄 Complete ML Pipeline")
-    st.image(f"{ASSETS_BASE_URL}pipeline_diagram.png", 
-            caption="End-to-end automation from GitHub to production deployment",
-            use_container_width=True)
+        st.markdown("### 🔄 Request Flow & Execution")
+        st.image(f"{ASSETS_BASE_URL}AWS_2.png", 
+                 caption="Detailed request flow showing cold start and warm execution paths",
+                 use_container_width=True)
+        
+        st.markdown("""
+        **What you're seeing:** Step-by-step request flow from user interaction to model inference. 
+        Shows both cold start (first request) and warm execution paths, plus VPC security boundaries.
+        Technical teams love this level of detail.
+        """)
+
+    st.markdown("---")
+
+    # Model Architecture Section
+    st.header("🧠 Model Architecture & Attention Mechanism")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("### 🏗️ Transformer Architecture")
+        st.image(f"{ASSETS_BASE_URL}transformer.png", 
+                 caption="4-layer transformer with 8 attention heads, 256d embeddings",
+                 use_container_width=True)
+        
+        st.markdown("""
+        **What you're seeing:** Complete transformer architecture showing the flow from input tokens 
+        through 4 transformer layers to output predictions. Each layer contains multi-head attention 
+        and feed-forward networks with residual connections.
+        """)
+
+    with col2:
+        st.markdown("### 👁️ Attention Mechanism Detail")
+        st.image(f"{ASSETS_BASE_URL}attention_1.png", 
+                 caption="How transformer attention works from tokens to visualisation",
+                 use_container_width=True)
+        
+        st.markdown("""
+        **What you're seeing:** Step-by-step breakdown of how attention mechanisms work, from 
+        input tokens through Q/K/V computation to the final attention heatmaps you can explore 
+        in the visualisation section.
+        """)
+
+    st.markdown("---")
+
+    # Pipeline Diagram Section  
+    st.header("🔄 Complete MLOps Pipeline")
+
+    st.image(f"{ASSETS_BASE_URL}pipeline_1.png", 
+             caption="End-to-end machine learning pipeline from development to production",
+             use_container_width=True)
+
+    st.markdown("""
+    **What you're seeing:** The complete MLOps pipeline demonstrating modern **FinOps** practices. 
+    Shows how code moves from local development through automated CI/CD to cost-optimised production infrastructure.
+
+    **Key Highlights:**
+    - **🏦 FinOps Integration:** Real-time cost monitoring and optimisation throughout the pipeline
+    - **⚡ Automation Flow:** GitHub Actions → Docker → ECR → Terraform → AWS Lambda  
+    - **💰 Cost Efficiency:** Serverless architecture minimises idle costs, with monitoring and alerts
+    - **🔄 Feedback Loop:** Performance and cost metrics inform continuous optimisation
+    - **⏱️ Speed:** Most deployments complete in under an hour with zero downtime
+
+    **FinOps Benefits:**
+    - Pay-per-request Lambda pricing (no idle costs)
+    - Real-time cost tracking and budget alerts  
+    - Infrastructure as Code enables cost predictability
+    - Automated scaling prevents over-provisioning
+    """)
     
     col1, col2 = st.columns([2, 1])
     
