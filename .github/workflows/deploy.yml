@@ -100,9 +100,10 @@ jobs:
           echo "Building generate_text function..."
           cd ../src/lambda_functions/generate_text
           docker build --no-cache -t $GENERATE_REPO .
+          docker tag $GENERATE_REPO:latest $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$GENERATE_REPO:${{ github.sha }}
           docker tag $GENERATE_REPO:latest $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$GENERATE_REPO:latest
+          docker push $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$GENERATE_REPO:${{ github.sha }}
           docker push $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$GENERATE_REPO:latest
-          
           docker system prune -af --volumes
 
   # Build visualize_attention Docker image (only when code changes)
@@ -165,9 +166,10 @@ jobs:
           echo "Building visualize_attention function..."
           cd ../src/lambda_functions/visualize_attention
           docker build --no-cache -t $VISUALIZE_REPO .
+          docker tag $VISUALIZE_REPO:latest $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$VISUALIZE_REPO:${{ github.sha }}
           docker tag $VISUALIZE_REPO:latest $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$VISUALIZE_REPO:latest
+          docker push $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$VISUALIZE_REPO:${{ github.sha }}
           docker push $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$VISUALIZE_REPO:latest
-          
           docker system prune -af --volumes
 
   # Deploy infrastructure and update Lambda functions

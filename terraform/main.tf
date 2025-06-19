@@ -1,5 +1,21 @@
 # main.tf - Main Terraform configuration
 
+# Get the latest image tags from ECR (will be SHA tags from GitHub)
+data "external" "latest_image_tags" {
+  program = ["bash", "-c", <<-EOT
+    # Get the most recently pushed image tag for each repository
+    GEN_REPO="transformer-model-generate-text-${local.resource_suffix}"
+    VIS_REPO="transformer-model-visualize-attention-${local.resource_suffix}"
+    
+    # Get latest tag (excluding 'latest' tag, get the SHA tag)
+    GEN_TAG=$(aws ecr describe-images --repository-name $GEN_REPO --query 'sort_by(imageDetails[?length(imageTags[?@ != `latest`]) > `0`], &imagePushedAt)[-1].imageTags[?@ != `latest`][0]' --output text 2>/dev/null || echo "latest")
+    VIS_TAG=$(aws ecr describe-images --repository-name $VIS_REPO --query 'sort_by(imageDetails[?length(imageTags[?@ != `latest`]) > `0`], &imagePushedAt)[-1].imageTags[?@ != `latest`][0]' --output text 2>/dev/null || echo "latest")
+    
+    echo "{\"generate_tag\":\"$GEN_TAG\",\"visualize_tag\":\"$VIS_TAG\"}"
+  EOT
+  ]
+}
+
 terraform {
   required_providers {
     aws = {
@@ -66,8 +82,9 @@ module "lambda_functions" {
   common_tags     = local.common_tags
   
   # Container image URIs (initially using latest tag)
-  generate_text_image_uri       = "${module.ecr_repositories.generate_text_repository_url}:latest"
-  visualize_attention_image_uri = "${module.ecr_repositories.visualize_attention_repository_url}:latest"
+  # Container image URIs using latest pushed tags (SHA-based)
+  generate_text_image_uri       = "${module.ecr_repositories.generate_text_repository_url}:${data.external.latest_image_tags.result.generate_tag}"
+  visualize_attention_image_uri = "${module.ecr_repositories.visualize_attention_repository_url}:${data.external.latest_image_tags.result.visualize_tag}"
 }
 
 # Create API Gateway
