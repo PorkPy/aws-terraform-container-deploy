@@ -116,6 +116,29 @@ VISUALISE_ENDPOINT = f"{API_BASE_URL}/visualize"
 # S3 URLs for diagrams
 ASSETS_BASE_URL = "https://transformer-model-artifacts-q3ukv7.s3.eu-west-2.amazonaws.com/static-assets/"
 
+def check_models_health():
+    """Quick health check without warming up"""
+    try:
+        # Minimal health check payload
+        health_payload = {"prompt": "test", "max_length": 1}
+        
+        response = requests.post(
+            GENERATE_ENDPOINT,
+            json=health_payload,
+            headers={"Content-Type": "application/json"},
+            timeout=8  # Reasonable timeout for health check
+        )
+        
+        if response.status_code == 200:
+            return True, "Models are ready and responsive"
+        else:
+            return False, f"Models returned status {response.status_code}"
+            
+    except requests.exceptions.Timeout:
+        return False, "Models are cold and need spinning up"
+    except Exception as e:
+        return False, f"Models unavailable: {str(e)}"
+
 def warm_up_lambdas():
     """Warm up both Lambda functions"""
     endpoints = [
@@ -128,11 +151,62 @@ def warm_up_lambdas():
             requests.post(
                 endpoint["url"], 
                 json=endpoint["payload"], 
-                timeout=1,
+                timeout=30,
                 headers={"Content-Type": "application/json"}
             )
         except:
             pass
+
+def check_warmup_status():
+    """Automatic model availability check with proper status flow"""
+    if 'models_status_checked' not in st.session_state:
+        st.session_state.models_status_checked = False
+        st.session_state.models_ready = False
+    
+    if not st.session_state.models_status_checked:
+        # Step 1: Initial availability check
+        with st.spinner("🔍 **Initiating model availability check...**"):
+            time.sleep(1)  # Brief pause for UX
+            models_ready, status_msg = check_models_health()
+        
+        if models_ready:
+            # Step 2a: Models are ready
+            st.success("✅ **Check passed - Models ready**")
+            st.session_state.models_ready = True
+            st.session_state.models_status_checked = True
+            time.sleep(1)
+            st.rerun()
+        else:
+            # Step 2b: Models need spinning up
+            st.warning("🟡 **Models are cold - Spinning up models. Stand by...**")
+            
+            with st.spinner("⚡ **Models spinning up... This may take 30-60 seconds**"):
+                start_time = time.time()
+                warm_up_lambdas()
+                spin_time = time.time() - start_time
+                
+                # Verify they're now ready
+                models_ready_after, _ = check_models_health()
+                
+            if models_ready_after:
+                st.success(f"🟢 **Models ready** - Spun up in {spin_time:.0f} seconds")
+                st.session_state.models_ready = True
+            else:
+                st.error("❌ **Models failed to spin up** - Some features may be slower")
+                st.session_state.models_ready = False
+            
+            st.session_state.models_status_checked = True
+            time.sleep(2)  # Let user read the message
+            st.rerun()
+    
+    else:
+        # Already checked - show current status
+        if st.session_state.models_ready:
+            st.success("🟢 **Models Ready** - All systems operational")
+        else:
+            st.info("🟡 **Models Status** - First requests may take longer")
+    
+    return st.session_state.models_ready
 
 def call_api(endpoint, payload):
     """Make API call with error handling"""
@@ -155,31 +229,6 @@ def call_api(endpoint, payload):
         return None, f"Network error: {str(e)}"
     except Exception as e:
         return None, f"Unexpected error: {str(e)}"
-
-def check_warmup_status():
-    """Check if models are warmed up"""
-    if 'models_ready' not in st.session_state:
-        st.session_state.models_ready = False
-        st.session_state.warmup_start_time = time.time()
-        threading.Thread(target=warm_up_lambdas, daemon=True).start()
-    
-    if not st.session_state.models_ready:
-        elapsed_time = time.time() - st.session_state.warmup_start_time
-        if elapsed_time >= 30:
-            st.session_state.models_ready = True
-            st.rerun()
-        else:
-            progress = min(elapsed_time / 30, 1.0)
-            remaining = max(30 - int(elapsed_time), 0)
-            
-            st.warning(f"⏳ **Models warming up... {remaining} seconds remaining**")
-            st.progress(progress)
-            time.sleep(1)
-            st.rerun()
-            return False
-    
-    st.success("🟢 **Models Ready** - All systems operational")
-    return True
 
 def show_home_page():
     """Home page with project overview"""
@@ -330,7 +379,7 @@ def show_home_page():
     
     **🔍 System Monitoring**: View real-time performance metrics and AWS costs for the production deployment
     """)
-    
+
     col1, col2, col3 = st.columns([1, 1, 1])
     
     with col1:
