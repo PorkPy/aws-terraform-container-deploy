@@ -242,64 +242,39 @@ def show_home_page():
     # Model Architecture Section
     st.header("🧠 Model Architecture & Attention Mechanism")
 
-    st.markdown("### 🏗️ Transformer Architecture")
-    col1, col2, col3 = st.columns([0.5, 3, 0.5])
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("### 🏗️ Transformer Architecture")
+        st.image(f"{ASSETS_BASE_URL}transformer.png", 
+                 caption="4-layer transformer with 8 attention heads, 256d embeddings",
+                 use_container_width=True)
+        
+        st.markdown("""
+        **What you're seeing:** Complete transformer architecture showing the flow from input tokens 
+        through 4 transformer layers to output predictions. Each layer contains multi-head attention 
+        and feed-forward networks with residual connections.
+        """)
+
     with col2:
-        st.image("https://jalammar.github.io/images/t/transformer_resideual_layer_norm_3.png", 
-                caption="Multi-layer transformer with residual connections - Source: The Illustrated Transformer",
-                use_container_width=True)
-            
-    st.markdown("""
-    **What you're seeing:** This transformer architecture is very similar to what I built, 
-    showing the key components: multi-head attention, feed-forward networks, and residual 
-    connections. The main differences from my implementation are:
-
-    - **Layers:** This shows 2 layers vs my 4-layer model
-    - **Dimensions:** Standard 512d vs my 256d embeddings  
-    - **Architecture:** This is encoder-decoder vs my encoder-only design
-    - **Training:** Standard pre-training vs my Pride and Prejudice corpus
-
-    The core concepts (attention, residuals, layer norms) are identical.
-    """)
-
-    st.markdown("### 👁️ Attention Mechanism Detail")
-    col1, col2, col3 = st.columns([0.5, 3, 0.5])
-    with col2:
+        st.markdown("### 👁️ Attention Mechanism Detail")
         st.image(f"{ASSETS_BASE_URL}attention_1.png", 
-                caption="How transformer attention works - Created with Sora AI",
-                use_container_width=True)
-            
-    st.markdown("""
-    **What you're seeing:** Detailed breakdown of transformer attention mechanisms, from 
-    input tokens through Q/K/V computation to final attention heatmaps. This diagram was 
-    created using Sora AI to illustrate the concepts clearly.
-
-    **Technical Accuracy Notes:**
-    - The core attention flow and mathematical formulas are correct
-    - Shows the right tensor dimensions and multi-head structure
-    - Some visual artifacts (unusual symbols, formatting) are AI-generated quirks
-    - The essential concepts match my implementation: 8 heads, matrix operations, softmax attention
-
-    **Key Components Explained:**
-    - **Single Attention Head:** Shows Q, K, V matrix creation and scaled dot-product
-    - **Multi-Head Attention:** Demonstrates parallel processing across 8 heads
-    - **Heatmap Visualisation:** How attention weights create the patterns you see in the demo
-
-    This illustrates the same attention mechanism implemented in my model, scaled to show 
-    the mathematical operations clearly.
-    """)
+                 caption="How transformer attention works from tokens to visualisation",
+                 use_container_width=True)
+        
+        st.markdown("""
+        **What you're seeing:** Step-by-step breakdown of how attention mechanisms work, from 
+        input tokens through Q/K/V computation to the final attention heatmaps you can explore 
+        in the visualisation section.
+        """)
 
     st.markdown("---")
 
     # Pipeline Diagram Section  
     st.header("🔄 Complete MLOps Pipeline")
 
-    # Use columns to constrain width
-    col1, col2, col3 = st.columns([0.5, 3, 0.5])
-    with col2:
-        st.image(f"{ASSETS_BASE_URL}pipeline_1.png", 
-                caption="End-to-end machine learning pipeline from development to production",
-                use_container_width=True)
+    st.image(f"{ASSETS_BASE_URL}pipeline_1.png", 
+             caption="End-to-end machine learning pipeline from development to production",
+             use_container_width=True)
 
     st.markdown("""
     **What you're seeing:** The complete MLOps pipeline demonstrating modern **FinOps** practices. 
@@ -319,31 +294,37 @@ def show_home_page():
     - Automated scaling prevents over-provisioning
     """)
     
-    col1, col2 = st.columns([2, 1])
     
+    st.markdown("""
+    ### What You Can Explore:
+    
+    **🚀 Text Generation**: Generate creative text continuations using the transformer model trained on Pride and Prejudice
+    
+    **👁️ Attention Visualisation**: Explore how the model "pays attention" to different words across multiple heads and layers
+    
+    **🔍 System Monitoring**: View real-time performance metrics and AWS costs for the production deployment
+    """)
+    
+    col1, col2, col3 = st.columns([1, 1, 1])
+
     with col1:
-        st.markdown("""
-        ### What You Can Explore:
-        
-        **🚀 Text Generation**: Generate creative text continuations using the transformer model trained on Pride and Prejudice
-        
-        **👁️ Attention Visualisation**: Explore how the model "pays attention" to different words across multiple heads and layers
-        
-        **🔍 System Monitoring**: View real-time performance metrics and AWS costs for the production deployment
-        """)
-    
-    with col2:
         st.markdown("""
         <div class="metric-card">
             <h3>⚡ Performance</h3>
             <p>Real-time metrics</p>
         </div>
-        
+        """, unsafe_allow_html=True)
+                    
+    with col2:
+        st.markdown("""
         <div class="metric-card">
             <h3>💰 Cost</h3>
             <p>Live AWS billing</p>
         </div>
+        """, unsafe_allow_html=True)
         
+    with col3:
+        st.markdown("""
         <div class="metric-card">
             <h3>🔧 Monitoring</h3>
             <p>CloudWatch integration</p>
