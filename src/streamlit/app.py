@@ -243,51 +243,51 @@ def show_home_page():
     st.header("🧠 Model Architecture & Attention Mechanism")
 
     st.markdown("### 🏗️ Transformer Architecture")
-    col1, col2, col3 = st.columns([1, 2, 1])
+    col1, col2, col3 = st.columns([0.5, 3, 0.5])
     with col2:
         st.image("https://jalammar.github.io/images/t/transformer_resideual_layer_norm_3.png", 
                 caption="Multi-layer transformer with residual connections - Source: The Illustrated Transformer",
                 use_container_width=True)
             
-        st.markdown("""
-        **What you're seeing:** This transformer architecture is very similar to what I built, 
-        showing the key components: multi-head attention, feed-forward networks, and residual 
-        connections. The main differences from my implementation are:
+    st.markdown("""
+    **What you're seeing:** This transformer architecture is very similar to what I built, 
+    showing the key components: multi-head attention, feed-forward networks, and residual 
+    connections. The main differences from my implementation are:
 
-        - **Layers:** This shows 2 layers vs my 4-layer model
-        - **Dimensions:** Standard 512d vs my 256d embeddings  
-        - **Architecture:** This is encoder-decoder vs my encoder-only design
-        - **Training:** Standard pre-training vs my Pride and Prejudice corpus
+    - **Layers:** This shows 2 layers vs my 4-layer model
+    - **Dimensions:** Standard 512d vs my 256d embeddings  
+    - **Architecture:** This is encoder-decoder vs my encoder-only design
+    - **Training:** Standard pre-training vs my Pride and Prejudice corpus
 
-        The core concepts (attention, residuals, layer norms) are identical.
-        """)
+    The core concepts (attention, residuals, layer norms) are identical.
+    """)
 
     st.markdown("### 👁️ Attention Mechanism Detail")
-    col1, col2, col3 = st.columns([1, 2, 1])
+    col1, col2, col3 = st.columns([0.5, 3, 0.5])
     with col2:
         st.image(f"{ASSETS_BASE_URL}attention_1.png", 
                 caption="How transformer attention works - Created with Sora AI",
                 use_container_width=True)
             
-        st.markdown("""
-        **What you're seeing:** Detailed breakdown of transformer attention mechanisms, from 
-        input tokens through Q/K/V computation to final attention heatmaps. This diagram was 
-        created using Sora AI to illustrate the concepts clearly.
+    st.markdown("""
+    **What you're seeing:** Detailed breakdown of transformer attention mechanisms, from 
+    input tokens through Q/K/V computation to final attention heatmaps. This diagram was 
+    created using Sora AI to illustrate the concepts clearly.
 
-        **Technical Accuracy Notes:**
-        - The core attention flow and mathematical formulas are correct
-        - Shows the right tensor dimensions and multi-head structure
-        - Some visual artifacts (unusual symbols, formatting) are AI-generated quirks
-        - The essential concepts match my implementation: 8 heads, matrix operations, softmax attention
+    **Technical Accuracy Notes:**
+    - The core attention flow and mathematical formulas are correct
+    - Shows the right tensor dimensions and multi-head structure
+    - Some visual artifacts (unusual symbols, formatting) are AI-generated quirks
+    - The essential concepts match my implementation: 8 heads, matrix operations, softmax attention
 
-        **Key Components Explained:**
-        - **Single Attention Head:** Shows Q, K, V matrix creation and scaled dot-product
-        - **Multi-Head Attention:** Demonstrates parallel processing across 8 heads
-        - **Heatmap Visualisation:** How attention weights create the patterns you see in the demo
+    **Key Components Explained:**
+    - **Single Attention Head:** Shows Q, K, V matrix creation and scaled dot-product
+    - **Multi-Head Attention:** Demonstrates parallel processing across 8 heads
+    - **Heatmap Visualisation:** How attention weights create the patterns you see in the demo
 
-        This illustrates the same attention mechanism implemented in my model, scaled to show 
-        the mathematical operations clearly.
-        """)
+    This illustrates the same attention mechanism implemented in my model, scaled to show 
+    the mathematical operations clearly.
+    """)
 
     st.markdown("---")
 
