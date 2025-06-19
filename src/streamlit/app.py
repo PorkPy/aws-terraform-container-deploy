@@ -686,6 +686,13 @@ def show_attention_visualisation_page():
                     }
                     result, error = call_api(VISUALISE_ENDPOINT, payload)
                     response_time = time.time() - start_time
+
+                    # DEBUG: Check what the Lambda actually returned
+                    st.write("**DEBUG - API Response Keys:**", list(result.keys()) if result else "No result")
+                    if result:
+                        st.write("**DEBUG - Has attention_image:**", "attention_image" in result)
+                        st.write("**DEBUG - Has attention_images:**", "attention_images" in result)
+                        st.write("**DEBUG - Payload sent:**", payload)
                     
                     if result:
                         st.success("✅ Analysis Complete!")
