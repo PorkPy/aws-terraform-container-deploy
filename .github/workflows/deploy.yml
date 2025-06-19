@@ -268,6 +268,54 @@ jobs:
           echo "⏳ Waiting for Lambda containers to update..."
           echo "This ensures new code is fully deployed before testing"
           sleep 60
+
+      - name: 📊 Check Lambda Deployment Status
+        run: |
+          echo "🔍 Checking Lambda function deployment status..."
+          
+          # Get current commit SHA
+          CURRENT_SHA="${{ github.sha }}"
+          echo "📝 Current deployment SHA: $CURRENT_SHA"
+          
+          # Check generate_text function
+          GEN_INFO=$(aws lambda get-function --function-name transformer-model-generate-text-q3ukv7 --region eu-west-2)
+          GEN_IMAGE_URI=$(echo "$GEN_INFO" | jq -r '.Code.ImageUri')
+          GEN_LAST_MODIFIED=$(echo "$GEN_INFO" | jq -r '.Configuration.LastModified')
+          
+          echo "📊 Generate Text Function:"
+          echo "   Image URI: $GEN_IMAGE_URI"
+          echo "   Last Modified: $GEN_LAST_MODIFIED"
+          
+          # Check visualize_attention function  
+          VIS_INFO=$(aws lambda get-function --function-name transformer-model-visualize-attention-q3ukv7 --region eu-west-2)
+          VIS_IMAGE_URI=$(echo "$VIS_INFO" | jq -r '.Code.ImageUri')
+          VIS_LAST_MODIFIED=$(echo "$VIS_INFO" | jq -r '.Configuration.LastModified')
+          
+          echo "📊 Visualize Attention Function:"
+          echo "   Image URI: $VIS_IMAGE_URI"
+          echo "   Last Modified: $VIS_LAST_MODIFIED"
+          
+          # Check if Lambda is using the current SHA
+          if echo "$GEN_IMAGE_URI" | grep -q "$CURRENT_SHA"; then
+            echo "✅ Generate function using current SHA: $CURRENT_SHA"
+          else
+            echo "⚠️ Generate function NOT using current SHA"
+            echo "   Expected: $CURRENT_SHA"
+            echo "   Actual: $GEN_IMAGE_URI"
+          fi
+          
+          if echo "$VIS_IMAGE_URI" | grep -q "$CURRENT_SHA"; then
+            echo "✅ Visualize function using current SHA: $CURRENT_SHA"
+          else
+            echo "❌ Visualize function NOT using current SHA - DEPLOYMENT FAILED"
+            echo "   Expected: $CURRENT_SHA"  
+            echo "   Actual: $VIS_IMAGE_URI"
+            exit 1
+          fi
+
+      - name: 🧪 Health Check - Text Generation
+        run: |
+          # ... your existing health check code stays the same
       
       - name: 🧪 Health Check - Text Generation
         run: |
