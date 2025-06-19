@@ -3,15 +3,15 @@
 # Get the latest image tags from ECR (will be SHA tags from GitHub)
 data "external" "latest_image_tags" {
   program = ["bash", "-c", <<-EOT
-    # Get the most recently pushed image tag for each repository
     GEN_REPO="transformer-model-generate-text-${local.resource_suffix}"
     VIS_REPO="transformer-model-visualize-attention-${local.resource_suffix}"
     
-    # Get latest tag (excluding 'latest' tag, get the SHA tag)
-    GEN_TAG=$(aws ecr describe-images --repository-name $GEN_REPO --query 'sort_by(imageDetails[?length(imageTags[?@ != `latest`]) > `0`], &imagePushedAt)[-1].imageTags[?@ != `latest`][0]' --output text 2>/dev/null || echo "latest")
-    VIS_TAG=$(aws ecr describe-images --repository-name $VIS_REPO --query 'sort_by(imageDetails[?length(imageTags[?@ != `latest`]) > `0`], &imagePushedAt)[-1].imageTags[?@ != `latest`][0]' --output text 2>/dev/null || echo "latest")
+    # Simple approach - get any SHA tag, clean the output
+    GEN_TAG=$(aws ecr list-images --repository-name "$GEN_REPO" --filter tagStatus=TAGGED --query 'imageIds[?imageTag && imageTag != `latest`] | [0].imageTag' --output text | tr -d '\r\n' || echo "latest")
+    VIS_TAG=$(aws ecr list-images --repository-name "$VIS_REPO" --filter tagStatus=TAGGED --query 'imageIds[?imageTag && imageTag != `latest`] | [0].imageTag' --output text | tr -d '\r\n' || echo "latest")
     
-    echo "{\"generate_tag\":\"$GEN_TAG\",\"visualize_tag\":\"$VIS_TAG\"}"
+    # Clean JSON output
+    printf '{"generate_tag":"%s","visualize_tag":"%s"}' "$GEN_TAG" "$VIS_TAG"
   EOT
   ]
 }
