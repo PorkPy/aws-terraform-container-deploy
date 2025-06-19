@@ -2,18 +2,7 @@
 
 # Get the latest image tags from ECR (will be SHA tags from GitHub)
 data "external" "latest_image_tags" {
-  program = ["bash", "-c", <<-EOT
-    GEN_REPO="transformer-model-generate-text-${local.resource_suffix}"
-    VIS_REPO="transformer-model-visualize-attention-${local.resource_suffix}"
-    
-    # Simple approach - get any SHA tag, clean the output
-    GEN_TAG=$(aws ecr list-images --repository-name "$GEN_REPO" --filter tagStatus=TAGGED --query 'imageIds[?imageTag && imageTag != `latest`] | [0].imageTag' --output text | tr -d '\r\n' || echo "latest")
-    VIS_TAG=$(aws ecr list-images --repository-name "$VIS_REPO" --filter tagStatus=TAGGED --query 'imageIds[?imageTag && imageTag != `latest`] | [0].imageTag' --output text | tr -d '\r\n' || echo "latest")
-    
-    # Clean JSON output
-    printf '{"generate_tag":"%s","visualize_tag":"%s"}' "$GEN_TAG" "$VIS_TAG"
-  EOT
-  ]
+  program = ["echo", "{\"generate_tag\":\"latest\",\"visualize_tag\":\"latest\"}"]
 }
 
 terraform {
