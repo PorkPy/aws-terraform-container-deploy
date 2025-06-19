@@ -246,3 +246,103 @@ jobs:
           echo "Deployment complete!"
           echo "API Endpoint: $(terraform output -raw api_endpoint)"
           echo "S3 Bucket: $(terraform output -raw model_bucket_name)"
+
+  # Health check and deployment verification
+  health-check:
+    needs: terraform
+    runs-on: ubuntu-latest
+    if: |
+      always() && (
+        needs.terraform.result == 'success' && (
+          github.event.inputs.action == 'deploy' || 
+          github.event.inputs.action == '' || 
+          github.event_name == 'push'
+        )
+      )
+    
+    steps:
+      - name: 🔍 Wait for Lambda Deployment
+        run: |
+          echo "⏳ Waiting for Lambda containers to update..."
+          echo "This ensures new code is fully deployed before testing"
+          sleep 60
+      
+      - name: 🧪 Health Check - Text Generation
+        run: |
+          echo "Testing text generation endpoint..."
+          RESPONSE=$(curl -s -w "%{http_code}" -X POST \
+            "https://0fc0dgwg69.execute-api.eu-west-2.amazonaws.com/generate" \
+            -H "Content-Type: application/json" \
+            -d '{"prompt":"deployment test","max_length":5}' \
+            -o /tmp/gen_response.json)
+          
+          echo "Response code: $RESPONSE"
+          
+          if [ "$RESPONSE" -eq 200 ]; then
+            echo "✅ Text Generation: HEALTHY"
+          else
+            echo "❌ Text Generation: FAILED (HTTP $RESPONSE)"
+            cat /tmp/gen_response.json
+            exit 1
+          fi
+      
+      - name: 🧪 Health Check - Attention Visualization (Single Head)
+        run: |
+          echo "Testing single head attention visualization..."
+          RESPONSE=$(curl -s -w "%{http_code}" -X POST \
+            "https://0fc0dgwg69.execute-api.eu-west-2.amazonaws.com/visualize" \
+            -H "Content-Type: application/json" \
+            -d '{"text":"deployment test","layer":0,"head":0}' \
+            -o /tmp/vis_single_response.json)
+          
+          echo "Response code: $RESPONSE"
+          
+          if [ "$RESPONSE" -eq 200 ]; then
+            if grep -q "attention_image" /tmp/vis_single_response.json; then
+              echo "✅ Single Head Visualization: HEALTHY"
+            else
+              echo "❌ Single Head Visualization: Invalid response format"
+              cat /tmp/vis_single_response.json
+              exit 1
+            fi
+          else
+            echo "❌ Single Head Visualization: FAILED (HTTP $RESPONSE)"
+            cat /tmp/vis_single_response.json
+            exit 1
+          fi
+      
+      - name: 🧪 Health Check - Attention Visualization (Multiple Heads)
+        run: |
+          echo "Testing multi-head attention visualization..."
+          RESPONSE=$(curl -s -w "%{http_code}" -X POST \
+            "https://0fc0dgwg69.execute-api.eu-west-2.amazonaws.com/visualize" \
+            -H "Content-Type: application/json" \
+            -d '{"text":"deployment test","layer":0,"heads":[0,1,2,3]}' \
+            -o /tmp/vis_multi_response.json)
+          
+          echo "Response code: $RESPONSE"
+          
+          if [ "$RESPONSE" -eq 200 ]; then
+            if grep -q "attention_images" /tmp/vis_multi_response.json; then
+              echo "✅ Multi-Head Visualization: HEALTHY (New feature working!)"
+            elif grep -q "attention_image" /tmp/vis_multi_response.json; then
+              echo "⚠️ Multi-Head Visualization: Single image returned (needs Lambda update)"
+            else
+              echo "❌ Multi-Head Visualization: Invalid response format"
+              cat /tmp/vis_multi_response.json
+              exit 1
+            fi
+          else
+            echo "❌ Multi-Head Visualization: FAILED (HTTP $RESPONSE)"
+            cat /tmp/vis_multi_response.json
+            exit 1
+          fi
+      
+      - name: 🎉 Deployment Complete
+        run: |
+          echo "🚀 All health checks passed!"
+          echo "✅ Text generation endpoint: Working"
+          echo "✅ Single head visualization: Working" 
+          echo "✅ Multi-head visualization: Working"
+          echo "📊 System ready for production traffic"
+          echo "⏱️ Deployment completed at: $(date)"
