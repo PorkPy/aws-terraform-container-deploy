@@ -332,19 +332,24 @@ def show_home_page():
         
         **🔍 System Monitoring**: View real-time performance metrics and AWS costs for the production deployment
         """)
+    col1, col2, col3 = st.columns([1, 1, 1])
     
-    with col2:
+    with col1:
         st.markdown("""
         <div class="metric-card">
             <h3>⚡ Performance</h3>
             <p>Real-time metrics</p>
         </div>
-        
+        """, unsafe_allow_html=True)
+
+        st.markdown("""
         <div class="metric-card">
             <h3>💰 Cost</h3>
             <p>Live AWS billing</p>
         </div>
-        
+        """, unsafe_allow_html=True)
+
+        st.markdown("""
         <div class="metric-card">
             <h3>🔧 Monitoring</h3>
             <p>CloudWatch integration</p>
