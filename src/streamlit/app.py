@@ -243,11 +243,11 @@ def show_home_page():
     st.header("🧠 Model Architecture & Attention Mechanism")
 
     col1, col2 = st.columns(2)
-    with col1:
+    with col2:
         st.markdown("### 🏗️ Transformer Architecture")
-        st.image(f"{ASSETS_BASE_URL}transformer.png", 
-                 caption="4-layer transformer with 8 attention heads, 256d embeddings",
-                 use_container_width=True)
+        st.image("https://jalammar.github.io/images/t/transformer_resideual_layer_norm_3.png", 
+                caption="Multi-layer transformer with residual connections - Source: The Illustrated Transformer",
+                use_container_width=True)
         
         st.markdown("""
         **What you're seeing:** Complete transformer architecture showing the flow from input tokens 
