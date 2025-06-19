@@ -243,7 +243,7 @@ def show_home_page():
     st.header("🧠 Model Architecture & Attention Mechanism")
 
     col1, col2 = st.columns(2)
-    with col2:
+    with col1:
         st.markdown("### 🏗️ Transformer Architecture")
         st.image("https://jalammar.github.io/images/t/transformer_resideual_layer_norm_3.png", 
                 caption="Multi-layer transformer with residual connections - Source: The Illustrated Transformer",
