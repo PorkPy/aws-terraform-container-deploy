@@ -242,13 +242,13 @@ def show_home_page():
     # Model Architecture Section
     st.header("🧠 Model Architecture & Attention Mechanism")
 
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown("### 🏗️ Transformer Architecture")
+    st.markdown("### 🏗️ Transformer Architecture")
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
         st.image("https://jalammar.github.io/images/t/transformer_resideual_layer_norm_3.png", 
                 caption="Multi-layer transformer with residual connections - Source: The Illustrated Transformer",
                 use_container_width=True)
-        
+            
         st.markdown("""
         **What you're seeing:** This transformer architecture is very similar to what I built, 
         showing the key components: multi-head attention, feed-forward networks, and residual 
@@ -262,12 +262,13 @@ def show_home_page():
         The core concepts (attention, residuals, layer norms) are identical.
         """)
 
+    st.markdown("### 👁️ Attention Mechanism Detail")
+    col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.markdown("### 👁️ Attention Mechanism Detail")
         st.image(f"{ASSETS_BASE_URL}attention_1.png", 
-                 caption="How transformer attention works from tokens to visualisation",
-                 use_container_width=True)
-        
+                caption="How transformer attention works - Created with Sora AI",
+                use_container_width=True)
+            
         st.markdown("""
         **What you're seeing:** Detailed breakdown of transformer attention mechanisms, from 
         input tokens through Q/K/V computation to final attention heatmaps. This diagram was 
@@ -293,9 +294,12 @@ def show_home_page():
     # Pipeline Diagram Section  
     st.header("🔄 Complete MLOps Pipeline")
 
-    st.image(f"{ASSETS_BASE_URL}pipeline_1.png", 
-             caption="End-to-end machine learning pipeline from development to production",
-             width=800)
+    # Use columns to constrain width
+    col1, col2, col3 = st.columns([0.5, 3, 0.5])
+    with col2:
+        st.image(f"{ASSETS_BASE_URL}pipeline_1.png", 
+                caption="End-to-end machine learning pipeline from development to production",
+                use_container_width=True)
 
     st.markdown("""
     **What you're seeing:** The complete MLOps pipeline demonstrating modern **FinOps** practices. 
