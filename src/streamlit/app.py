@@ -320,18 +320,17 @@ def show_home_page():
     - Automated scaling prevents over-provisioning
     """)
     
-    col1, col2 = st.columns([2, 1])
     
-    with col1:
-        st.markdown("""
-        ### What You Can Explore:
-        
-        **🚀 Text Generation**: Generate creative text continuations using the transformer model trained on Pride and Prejudice
-        
-        **👁️ Attention Visualisation**: Explore how the model "pays attention" to different words across multiple heads and layers
-        
-        **🔍 System Monitoring**: View real-time performance metrics and AWS costs for the production deployment
-        """)
+    st.markdown("""
+    ### What You Can Explore:
+    
+    **🚀 Text Generation**: Generate creative text continuations using the transformer model trained on Pride and Prejudice
+    
+    **👁️ Attention Visualisation**: Explore how the model "pays attention" to different words across multiple heads and layers
+    
+    **🔍 System Monitoring**: View real-time performance metrics and AWS costs for the production deployment
+    """)
+    
     col1, col2, col3 = st.columns([1, 1, 1])
     
     with col1:
@@ -349,7 +348,7 @@ def show_home_page():
             <p>Live AWS billing</p>
         </div>
         """, unsafe_allow_html=True)
-        
+
     with col3:
         st.markdown("""
         <div class="metric-card">
