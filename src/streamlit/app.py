@@ -239,6 +239,7 @@ def show_home_page():
 
     st.markdown("---")
 
+
     # Model Architecture Section
     st.header("🧠 Model Architecture & Attention Mechanism")
 
