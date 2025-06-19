@@ -28,8 +28,12 @@ def lambda_handler(event, context):
             
         text = body.get('text', 'Hello, world!')
         layer = int(body.get('layer', 0))
-        head = int(body.get('head', 0))
-        
+
+        # Handle both single head and multiple heads
+        heads = body.get('heads', [body.get('head', 0)])
+        if not isinstance(heads, list):
+            heads = [heads]
+                
         # Handle warmup requests
         if text == "warmup":
             return {
