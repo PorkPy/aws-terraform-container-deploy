@@ -250,9 +250,16 @@ def show_home_page():
                 use_container_width=True)
         
         st.markdown("""
-        **What you're seeing:** Complete transformer architecture showing the flow from input tokens 
-        through 4 transformer layers to output predictions. Each layer contains multi-head attention 
-        and feed-forward networks with residual connections.
+        **What you're seeing:** This transformer architecture is very similar to what I built, 
+        showing the key components: multi-head attention, feed-forward networks, and residual 
+        connections. The main differences from my implementation are:
+
+        - **Layers:** This shows 2 layers vs my 4-layer model
+        - **Dimensions:** Standard 512d vs my 256d embeddings  
+        - **Architecture:** This is encoder-decoder vs my encoder-only design
+        - **Training:** Standard pre-training vs my Pride and Prejudice corpus
+
+        The core concepts (attention, residuals, layer norms) are identical.
         """)
 
     with col2:
@@ -262,9 +269,23 @@ def show_home_page():
                  use_container_width=True)
         
         st.markdown("""
-        **What you're seeing:** Step-by-step breakdown of how attention mechanisms work, from 
-        input tokens through Q/K/V computation to the final attention heatmaps you can explore 
-        in the visualisation section.
+        **What you're seeing:** Detailed breakdown of transformer attention mechanisms, from 
+        input tokens through Q/K/V computation to final attention heatmaps. This diagram was 
+        created using Sora AI to illustrate the concepts clearly.
+
+        **Technical Accuracy Notes:**
+        - The core attention flow and mathematical formulas are correct
+        - Shows the right tensor dimensions and multi-head structure
+        - Some visual artifacts (unusual symbols, formatting) are AI-generated quirks
+        - The essential concepts match my implementation: 8 heads, matrix operations, softmax attention
+
+        **Key Components Explained:**
+        - **Single Attention Head:** Shows Q, K, V matrix creation and scaled dot-product
+        - **Multi-Head Attention:** Demonstrates parallel processing across 8 heads
+        - **Heatmap Visualisation:** How attention weights create the patterns you see in the demo
+
+        This illustrates the same attention mechanism implemented in my model, scaled to show 
+        the mathematical operations clearly.
         """)
 
     st.markdown("---")
@@ -274,7 +295,7 @@ def show_home_page():
 
     st.image(f"{ASSETS_BASE_URL}pipeline_1.png", 
              caption="End-to-end machine learning pipeline from development to production",
-             use_container_width=True)
+             width=800)
 
     st.markdown("""
     **What you're seeing:** The complete MLOps pipeline demonstrating modern **FinOps** practices. 
