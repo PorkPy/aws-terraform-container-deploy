@@ -55,3 +55,46 @@ output "visualize_attention_repository_name" {
   description = "ECR repository name for visualize_attention function"
   value       = aws_ecr_repository.visualize_attention.name
 }
+
+# Add this after your ECR repository resources
+resource "aws_ecr_lifecycle_policy" "generate_text_cleanup" {
+  repository = aws_ecr_repository.generate_text.name
+
+  policy = jsonencode({
+    rules = [
+      {
+        rulePriority = 1
+        description  = "Keep only latest 2 images"
+        selection = {
+          tagStatus = "any"
+          countType = "imageCountMoreThan"
+          countNumber = 2
+        }
+        action = {
+          type = "expire"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_ecr_lifecycle_policy" "visualize_attention_cleanup" {
+  repository = aws_ecr_repository.visualize_attention.name
+
+  policy = jsonencode({
+    rules = [
+      {
+        rulePriority = 1
+        description  = "Keep only latest 2 images"
+        selection = {
+          tagStatus = "any"
+          countType = "imageCountMoreThan"
+          countNumber = 2
+        }
+        action = {
+          type = "expire"
+        }
+      }
+    ]
+  })
+}
