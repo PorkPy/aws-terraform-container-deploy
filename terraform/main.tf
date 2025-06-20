@@ -72,8 +72,9 @@ module "lambda_functions" {
   
   # Container image URIs (initially using latest tag)
   # Container image URIs using latest pushed tags (SHA-based)
-  generate_text_image_uri       = "${module.ecr_repositories.generate_text_repository_url}:${data.external.latest_image_tags.result.generate_tag}"
-  visualize_attention_image_uri = "${module.ecr_repositories.visualize_attention_repository_url}:${data.external.latest_image_tags.result.visualize_tag}"
+  # In main.tf, just use:
+generate_text_image_uri       = "${module.ecr_repositories.generate_text_repository_url}:latest"
+visualize_attention_image_uri = "${module.ecr_repositories.visualize_attention_repository_url}:latest"
 }
 
 # Create API Gateway
