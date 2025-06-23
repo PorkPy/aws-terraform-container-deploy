@@ -119,7 +119,7 @@ def lambda_handler(event, context):
             tokens = [tokenizer.idx_to_word.get(idx, '<UNK>') for idx in input_ids]
             print(f"DEBUG: tokens: {tokens}")
             
-            attention_image = visualize_attention(tokens, attentions, layer, head)
+            attention_image = visualize_attention(tokens, attentions, layer, heads)
             
             if attention_image is None:
                 raise Exception("Visualization failed - returned None")
