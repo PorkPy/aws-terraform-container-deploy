@@ -98,7 +98,7 @@ jobs:
           echo "✅ Visualize attention dependencies scan passed"
 
       - name: Upload security reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: security-reports
