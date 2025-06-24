@@ -79,50 +79,8 @@ def get_cloudwatch_metrics():
     """Get CloudWatch metrics for Lambda functions with proper period handling"""
     cloudwatch = get_aws_client('cloudwatch')
     if not cloudwatch:
-        # Return realistic demo metrics that address the constant invocation issue
-        import random
-        demo_data = {}
-        for function_name in FUNCTION_NAMES:
-            # Generate more realistic invocation patterns
-            invocations = []
-            duration = []
-            errors = []
-            
-            for i in range(24):  # 24 hours of data
-                timestamp = datetime.utcnow() - timedelta(hours=23-i)
-                
-                # More realistic invocation pattern - mostly 0 with occasional spikes
-                if random.random() < 0.15:  # 15% chance of activity
-                    invocation_count = random.randint(1, 8)
-                else:
-                    invocation_count = 0
-                
-                invocations.append({
-                    'Timestamp': timestamp,
-                    'Sum': invocation_count
-                })
-                
-                # Only add duration if there were invocations
-                if invocation_count > 0:
-                    duration.append({
-                        'Timestamp': timestamp,
-                        'Average': random.randint(800, 1200),
-                        'Maximum': random.randint(1200, 2000)
-                    })
-                
-                # Rarely add errors
-                if random.random() < 0.02:  # 2% chance of error
-                    errors.append({
-                        'Timestamp': timestamp,
-                        'Sum': 1
-                    })
-            
-            demo_data[function_name] = {
-                'invocations': invocations,
-                'duration': duration,
-                'errors': errors
-            }
-        return demo_data
+        st.error("CloudWatch client failed to initialize")
+        return {}
     
     end_time = datetime.utcnow()
     start_time = end_time - timedelta(hours=24)
