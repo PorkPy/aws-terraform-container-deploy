@@ -32,7 +32,7 @@ variable "visualize_attention_image_uri" {
 # IAM role for Lambda
 resource "aws_iam_role" "lambda_role" {
   name = "${var.project_name}-lambda-role-${var.resource_suffix}"
-  
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -45,7 +45,7 @@ resource "aws_iam_role" "lambda_role" {
       }
     ]
   })
-  
+
   tags = var.common_tags
 }
 
@@ -53,7 +53,7 @@ resource "aws_iam_role" "lambda_role" {
 resource "aws_iam_role_policy" "lambda_policy" {
   name = "${var.project_name}-lambda-policy"
   role = aws_iam_role.lambda_role.id
-  
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -63,7 +63,7 @@ resource "aws_iam_role_policy" "lambda_policy" {
           "logs:CreateLogStream",
           "logs:PutLogEvents"
         ]
-        Effect = "Allow"
+        Effect   = "Allow"
         Resource = "arn:aws:logs:*:*:*"
       },
       {
@@ -85,25 +85,25 @@ resource "aws_iam_role_policy" "lambda_policy" {
 resource "aws_lambda_function" "generate_text" {
   function_name = "${var.project_name}-generate-text-${var.resource_suffix}"
   role          = aws_iam_role.lambda_role.arn
-  
+
   # Container configuration
   package_type = "Image"
   image_uri    = var.generate_text_image_uri
-  
+
   timeout     = 900  # 15 minutes
   memory_size = 3008 # 3GB for transformer models
-  
+
   # Prevent runaway concurrent executions
   reserved_concurrent_executions = 1
-  
+
   environment {
     variables = {
-      MODEL_BUCKET = var.model_bucket
-      MODEL_KEY    = "model/transformer_model.pt"
+      MODEL_BUCKET  = var.model_bucket
+      MODEL_KEY     = "model/transformer_model.pt"
       TOKENIZER_KEY = "model/tokenizer.json"
     }
   }
-  
+
   tags = var.common_tags
 }
 
@@ -111,29 +111,29 @@ resource "aws_lambda_function" "generate_text" {
 resource "aws_lambda_function" "visualize_attention" {
   function_name = "${var.project_name}-visualize-attention-${var.resource_suffix}"
   role          = aws_iam_role.lambda_role.arn
-  
+
   # Container configuration
   package_type = "Image"
   image_uri    = var.visualize_attention_image_uri
-  
+
   timeout     = 900  # 15 minutes
   memory_size = 3008 # 3GB for transformer models
-  
+
   # Prevent runaway concurrent executions
   reserved_concurrent_executions = 1
-  
+
   environment {
     variables = {
-      MODEL_BUCKET = var.model_bucket
-      MODEL_KEY    = "model/transformer_model.pt"
-      TOKENIZER_KEY = "model/tokenizer.json"
+      MODEL_BUCKET         = var.model_bucket
+      MODEL_KEY            = "model/transformer_model.pt"
+      TOKENIZER_KEY        = "model/tokenizer.json"
       VISUALIZATION_BUCKET = var.model_bucket
       VISUALIZATION_PREFIX = "visualizations/"
       # Fix matplotlib cache directory issues
       MPLCONFIGDIR = "/tmp/matplotlib"
     }
   }
-  
+
   tags = var.common_tags
 }
 

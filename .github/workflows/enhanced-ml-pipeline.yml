@@ -237,12 +237,14 @@ jobs:
       - name: Build Generate Text Lambda container
         run: |
           docker build -t generate-text-test:latest \
-            -f src/lambda_functions/generate_text/Dockerfile .
+            -f src/lambda_functions/generate_text/Dockerfile \
+            src/lambda_functions/generate_text/
 
       - name: Build Visualize Attention Lambda container
         run: |
           docker build -t visualize-attention-test:latest \
-            -f src/lambda_functions/visualize_attention/Dockerfile .
+            -f src/lambda_functions/visualize_attention/Dockerfile \
+            src/lambda_functions/visualize_attention/
 
       - name: Run Trivy vulnerability scanner - Generate Text
         uses: aquasecurity/trivy-action@master
