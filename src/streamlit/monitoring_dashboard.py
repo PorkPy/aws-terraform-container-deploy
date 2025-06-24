@@ -2,9 +2,10 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import time
 import os
+
 
 # AWS Configuration
 AWS_REGION = "eu-west-2"
@@ -82,7 +83,7 @@ def get_cloudwatch_metrics():
         st.error("CloudWatch client failed to initialize")
         return {}
     
-    end_time = datetime.utcnow()
+    end_time = datetime.now(timezone.utc)
     start_time = end_time - timedelta(hours=24)
     
     metrics_data = {}
