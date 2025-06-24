@@ -215,7 +215,7 @@ jobs:
           output_file_path: checkov-results.sarif
 
       - name: Upload infrastructure security reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: infrastructure-security-reports
@@ -266,7 +266,7 @@ jobs:
           echo "✅ Container functionality tests passed"
 
       - name: Upload container security reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: container-security-reports
@@ -602,7 +602,7 @@ jobs:
           echo "✅ Regression report generated"
 
       - name: Upload regression artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: regression-results-${{ github.run_id }}
           path: |
