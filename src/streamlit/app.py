@@ -458,7 +458,7 @@ def show_home_page():
     # Model warmup status
     st.markdown("---")
     st.header("🔥 System Status")
-    check_warmup_status()
+    #check_warmup_status()
 
 def show_text_generation_page():
     """Text generation page"""
@@ -494,7 +494,7 @@ def show_text_generation_page():
     st.markdown("---")
     
     # Check warmup status
-    models_ready = check_warmup_status()
+    models_ready = True #check_warmup_status()
     
     if models_ready:
         # Text generation interface
@@ -628,7 +628,7 @@ def show_attention_visualisation_page():
     st.markdown("---")
     
     # Check warmup status
-    models_ready = check_warmup_status()
+    models_ready =  True #check_warmup_status()
     
     if models_ready:
         # Attention visualisation interface
