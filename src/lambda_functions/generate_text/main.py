@@ -6,16 +6,6 @@ import boto3
 import torch
 from tokenizer import SimpleTokenizer as Tokenizer
 
-print(f"=== INCOMING REQUEST DEBUG ===")
-print(f"Event: {json.dumps(event, default=str)}")
-print(
-    f"Source IP: {event.get('requestContext', {}).get('identity', {}).get('sourceIp', 'Unknown')}"
-)
-print(
-    f"User Agent: {event.get('requestContext', {}).get('identity', {}).get('userAgent', 'Unknown')}"
-)
-print(f"=== END DEBUG ===")
-
 # Initialize S3 client
 s3 = boto3.client("s3")
 
