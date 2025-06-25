@@ -204,7 +204,6 @@ jobs:
         with:
           working_directory: terraform/
           format: sarif
-          output: tfsec-results.sarif
 
       - name: Checkov Infrastructure Security Scan
         uses: bridgecrewio/checkov-action@master
