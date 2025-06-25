@@ -341,18 +341,6 @@ jobs:
         with:
           terraform_version: 1.5.0
 
-      - name: Deploy infrastructure with Terraform
-        run: |
-          cd terraform/
-          terraform init
-          terraform plan \
-            -var="generate_text_image_uri=${{ steps.build-generate.outputs.generate_image_uri }}" \
-            -var="visualize_attention_image_uri=${{ steps.build-visualize.outputs.visualize_image_uri }}"
-          terraform apply -auto-approve \
-            -var="generate_text_image_uri=${{ steps.build-generate.outputs.generate_image_uri }}" \
-            -var="visualize_attention_image_uri=${{ steps.build-visualize.outputs.visualize_image_uri }}"
-          echo "✅ Infrastructure deployed successfully"
-
   # =============================================================================
   # PRODUCTION INTEGRATION TESTS
   # =============================================================================
@@ -498,54 +486,54 @@ jobs:
           echo "commit_message=$(git log --format=%B -n 1 ${{ github.sha }} | head -1)" >> $GITHUB_OUTPUT
           echo "deployment_time=$(date -u +%Y-%m-%d\ %H:%M:%S\ UTC)" >> $GITHUB_OUTPUT
 
-      - name: Send Slack deployment notification
-        uses: 8398a7/action-slack@v3
-        if: always()
-        with:
-          status: ${{ steps.deployment-status.outputs.status }}
-          custom_payload: |
-            {
-              "text": "${{ steps.deployment-status.outputs.message }}",
-              "attachments": [
-                {
-                  "color": "${{ steps.deployment-status.outputs.color }}",
-                  "fields": [
-                    {
-                      "title": "🏗️ Project",
-                      "value": "Custom Transformer ML Pipeline",
-                      "short": true
-                    },
-                    {
-                      "title": "🌍 Environment", 
-                      "value": "Production (AWS eu-west-2)",
-                      "short": true
-                    },
-                    {
-                      "title": "👤 Author",
-                      "value": "${{ steps.metrics.outputs.commit_author }}",
-                      "short": true
-                    },
-                    {
-                      "title": "⏰ Deployed",
-                      "value": "${{ steps.metrics.outputs.deployment_time }}",
-                      "short": true
-                    },
-                    {
-                      "title": "🔗 Commit",
-                      "value": "<https://github.com/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>",
-                      "short": true
-                    },
-                    {
-                      "title": "🌐 Live URL",
-                      "value": "<${{ env.PROD_API_BASE }}|Production API>",
-                      "short": true
-                    }
-                  ]
-                }
-              ]
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      # - name: Send Slack deployment notification
+      #   uses: 8398a7/action-slack@v3
+      #   if: always()
+      #   with:
+      #     status: ${{ steps.deployment-status.outputs.status }}
+      #     custom_payload: |
+      #       {
+      #         "text": "${{ steps.deployment-status.outputs.message }}",
+      #         "attachments": [
+      #           {
+      #             "color": "${{ steps.deployment-status.outputs.color }}",
+      #             "fields": [
+      #               {
+      #                 "title": "🏗️ Project",
+      #                 "value": "Custom Transformer ML Pipeline",
+      #                 "short": true
+      #               },
+      #               {
+      #                 "title": "🌍 Environment", 
+      #                 "value": "Production (AWS eu-west-2)",
+      #                 "short": true
+      #               },
+      #               {
+      #                 "title": "👤 Author",
+      #                 "value": "${{ steps.metrics.outputs.commit_author }}",
+      #                 "short": true
+      #               },
+      #               {
+      #                 "title": "⏰ Deployed",
+      #                 "value": "${{ steps.metrics.outputs.deployment_time }}",
+      #                 "short": true
+      #               },
+      #               {
+      #                 "title": "🔗 Commit",
+      #                 "value": "<https://github.com/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>",
+      #                 "short": true
+      #               },
+      #               {
+      #                 "title": "🌐 Live URL",
+      #                 "value": "<${{ env.PROD_API_BASE }}|Production API>",
+      #                 "short": true
+      #               }
+      #             ]
+      #           }
+      #         ]
+      #       }
+      #   env:
+      #     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   # =============================================================================
   # SCHEDULED REGRESSION & MONITORING TESTS
