@@ -74,6 +74,8 @@ jobs:
       - name: Security scan (Bandit) - Lambda functions
         run: |
           bandit -r src/lambda_functions/ -f json -o bandit-lambda-report.json
+          echo "Bandit report contents:"
+          cat bandit-lambda-report.json
           bandit -r src/lambda_functions/ --severity-level medium
           echo "✅ Lambda security scan passed"
 
