@@ -435,12 +435,12 @@ jobs:
           python scripts/setup_custom_metrics.py
           echo "✅ Custom metrics configured"
 
-      - name: Configure cost monitoring alerts
-        run: |
-          python scripts/setup_cost_alerts.py \
-            --threshold=10 \
-            --email=${{ secrets.ALERT_EMAIL }}
-          echo "✅ Cost alerts configured"
+      # - name: Configure cost monitoring alerts
+      #   run: |
+      #     python scripts/setup_cost_alerts.py \
+      #       --threshold=10 \
+      #       --email=${{ secrets.ALERT_EMAIL }}
+      #     echo "✅ Cost alerts configured"
 
       - name: Setup performance dashboards
         run: |
