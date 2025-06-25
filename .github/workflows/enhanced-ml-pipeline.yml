@@ -262,8 +262,8 @@ jobs:
       - name: Test container functionality
         run: |
           # Test basic container startup
-          timeout 30s docker run --rm generate-text-test:latest python -c "import torch; import boto3; print('Generate text container OK')"
-          timeout 30s docker run --rm visualize-attention-test:latest python -c "import torch; import matplotlib; print('Visualize attention container OK')"
+          timeout 30s docker run --rm --entrypoint python generate-text-test:latest -c "import torch; import boto3; print('Generate text container OK')"
+          timeout 30s docker run --rm --entrypoint python visualize-attention-test:latest -c "import torch; import matplotlib; print('Visualize attention container OK')"
           echo "✅ Container functionality tests passed"
 
       - name: Upload container security reports
