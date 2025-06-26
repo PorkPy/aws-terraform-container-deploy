@@ -16,22 +16,22 @@ variable "common_tags" {
 # ECR Repository for generate_text function
 resource "aws_ecr_repository" "generate_text" {
   name = "${var.project_name}-generate-text-${var.resource_suffix}"
-  
+
   image_scanning_configuration {
     scan_on_push = true
   }
-  
+
   tags = var.common_tags
 }
 
 # ECR Repository for visualize_attention function
 resource "aws_ecr_repository" "visualize_attention" {
   name = "${var.project_name}-visualize-attention-${var.resource_suffix}"
-  
+
   image_scanning_configuration {
     scan_on_push = true
   }
-  
+
   tags = var.common_tags
 }
 
@@ -66,8 +66,8 @@ resource "aws_ecr_lifecycle_policy" "generate_text_cleanup" {
         rulePriority = 1
         description  = "Keep only latest 2 images"
         selection = {
-          tagStatus = "any"
-          countType = "imageCountMoreThan"
+          tagStatus   = "any"
+          countType   = "imageCountMoreThan"
           countNumber = 2
         }
         action = {
@@ -87,8 +87,8 @@ resource "aws_ecr_lifecycle_policy" "visualize_attention_cleanup" {
         rulePriority = 1
         description  = "Keep only latest 2 images"
         selection = {
-          tagStatus = "any"
-          countType = "imageCountMoreThan"
+          tagStatus   = "any"
+          countType   = "imageCountMoreThan"
           countNumber = 2
         }
         action = {

@@ -27,17 +27,17 @@ variable "common_tags" {
 # CloudWatch Log Group for Lambda functions
 resource "aws_cloudwatch_log_group" "lambda_log_groups" {
   count = length(var.lambda_functions)
-  
+
   name              = "/aws/lambda/${var.lambda_functions[count.index]}"
   retention_in_days = 14
-  
+
   tags = var.common_tags
 }
 
 # CloudWatch Alarm for Lambda errors
 resource "aws_cloudwatch_metric_alarm" "lambda_errors" {
   count = length(var.lambda_functions)
-  
+
   alarm_name          = "${var.lambda_functions[count.index]}-errors"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 1
@@ -47,10 +47,10 @@ resource "aws_cloudwatch_metric_alarm" "lambda_errors" {
   statistic           = "Sum"
   threshold           = 0
   alarm_description   = "This metric monitors lambda function errors"
-  
+
   dimensions = {
     FunctionName = var.lambda_functions[count.index]
   }
-  
+
   tags = var.common_tags
 }

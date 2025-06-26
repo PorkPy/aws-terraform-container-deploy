@@ -12,12 +12,12 @@ terraform {
       version = "~> 4.16"
     }
   }
-  
+
   # Optional: Configure backend for state storage
   backend "s3" {
     bucket = "dom-terraform-state-bucket"
     key    = "transformer-model/terraform.tfstate"
-    region = "eu-west-2"  
+    region = "eu-west-2"
   }
 }
 
@@ -47,7 +47,7 @@ locals {
 # Create S3 bucket for model artifacts
 module "model_storage" {
   source = "./s3"
-  
+
   bucket_name = "${local.project_name}-artifacts-${local.resource_suffix}"
   common_tags = local.common_tags
 }
@@ -55,7 +55,7 @@ module "model_storage" {
 # Create ECR repositories for container images
 module "ecr_repositories" {
   source = "./ecr"
-  
+
   project_name    = local.project_name
   resource_suffix = local.resource_suffix
   common_tags     = local.common_tags
@@ -64,34 +64,34 @@ module "ecr_repositories" {
 # Create Lambda functions (container-based)
 module "lambda_functions" {
   source = "./lambda"
-  
+
   project_name    = local.project_name
   resource_suffix = local.resource_suffix
   model_bucket    = module.model_storage.bucket_name
   common_tags     = local.common_tags
-  
+
   # Container image URIs (initially using latest tag)
   # Container image URIs using latest pushed tags (SHA-based)
   # In main.tf, just use:
-generate_text_image_uri       = "${module.ecr_repositories.generate_text_repository_url}:latest"
-visualize_attention_image_uri = "${module.ecr_repositories.visualize_attention_repository_url}:latest"
+  generate_text_image_uri       = "${module.ecr_repositories.generate_text_repository_url}:latest"
+  visualize_attention_image_uri = "${module.ecr_repositories.visualize_attention_repository_url}:latest"
 }
 
 # Create API Gateway
 module "api_gateway" {
   source = "./api_gateway"
-  
-  project_name       = local.project_name
-  resource_suffix    = local.resource_suffix
-  generate_lambda_fn = module.lambda_functions.generate_text_function_arn
+
+  project_name        = local.project_name
+  resource_suffix     = local.resource_suffix
+  generate_lambda_fn  = module.lambda_functions.generate_text_function_arn
   visualize_lambda_fn = module.lambda_functions.visualize_attention_function_arn
-  common_tags        = local.common_tags
+  common_tags         = local.common_tags
 }
 
 # Set up monitoring and alerts
 module "monitoring" {
   source = "./cloudwatch"
-  
+
   project_name    = local.project_name
   resource_suffix = local.resource_suffix
   lambda_functions = [

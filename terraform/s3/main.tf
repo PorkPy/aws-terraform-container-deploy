@@ -9,9 +9,9 @@ variable "common_tags" {
 }
 
 resource "aws_s3_bucket" "model_artifacts" {
-  bucket = var.bucket_name
-  force_destroy = true  # Allows Terraform to delete the bucket even if it contains files
-  
+  bucket        = var.bucket_name
+  force_destroy = true # Allows Terraform to delete the bucket even if it contains files
+
   tags = var.common_tags
 }
 

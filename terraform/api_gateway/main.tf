@@ -32,7 +32,7 @@ resource "aws_apigatewayv2_api" "transformer_api" {
     allow_methods = ["GET", "POST", "OPTIONS"]
     allow_headers = ["content-type"]
   }
-  
+
   tags = var.common_tags
 }
 
