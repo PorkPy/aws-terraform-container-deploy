@@ -8,7 +8,7 @@ import os
 from unittest.mock import Mock, patch, MagicMock
 import torch
 import boto3
-from moto import mock_s3
+from moto.s3 import mock_s3
 
 @pytest.fixture
 def sample_pride_prejudice_text():
