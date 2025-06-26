@@ -88,16 +88,18 @@ jobs:
           echo "✅ Streamlit security scan passed"
 
       - name: Dependency vulnerability scan - Generate text
+        continue-on-error: true  # Show vulnerabilities but don't fail
         run: |
           pip install -r src/lambda_functions/generate_text/requirements.txt
-          safety scan || echo "⚠️ WARNING: Security vulnerabilities found in dependencies"
-          echo "✅ Generate text dependencies scan completed (with warnings)"
+          safety scan
+          echo "✅ Generate text dependencies scan completed"
 
-      - name: Dependency vulnerability scan - Visualize attention  
+      - name: Dependency vulnerability scan - Visualize attention
+        continue-on-error: true  # Show vulnerabilities but don't fail  
         run: |
           pip install -r src/lambda_functions/visualize_attention/requirements.txt
-          safety scan || echo "⚠️ WARNING: Security vulnerabilities found in dependencies"
-          echo "✅ Visualize attention dependencies scan completed (with warnings)"
+          safety scan
+          echo "✅ Visualize attention dependencies scan completed"
 
       - name: Upload security reports
         uses: actions/upload-artifact@v4
@@ -202,11 +204,12 @@ jobs:
           echo "✅ All Terraform modules validated"
 
       # TODO: Re-enable after fixing GitHub Issues #1 and #2
-      # - name: TFSec Security Scan
-      #   uses: aquasecurity/tfsec-action@v1.0.3
-      #   with:
-      #     working_directory: terraform/
-      #     format: sarif
+      - name: TFSec Security Scan
+        continue-on-error: true  # Continue pipeline but show warnings
+        uses: aquasecurity/tfsec-action@v1.0.3
+        with:
+          working_directory: terraform/
+          format: sarif
 
       - name: Checkov Infrastructure Security Scan
         uses: bridgecrewio/checkov-action@master
