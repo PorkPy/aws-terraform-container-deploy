@@ -63,7 +63,7 @@ def lambda_handler(event, context):
             )
 
             # Load checkpoint - EXACTLY like working generate_text
-            checkpoint = torch.load(model_path, map_location=torch.device("cpu"))
+            checkpoint = torch.load(model_path, map_location=torch.device("cpu"), weights_only=True)
             model.load_state_dict(checkpoint["model_state_dict"])
             model.eval()
 

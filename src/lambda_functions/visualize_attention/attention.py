@@ -56,8 +56,9 @@ class MultiHeadAttention(nn.Module):
         super().__init__()
 
         # Ensure d_model is divisible by n_heads
-        assert d_model % n_heads == 0, "d_model must be divisible by n_heads"
-
+        if d_model % n_heads != 0:
+            raise ValueError("d_model must be divisible by n_heads")
+        
         self.d_model = d_model
         self.n_heads = n_heads
         self.d_k = d_model // n_heads  # Dimension of each head's key/query
