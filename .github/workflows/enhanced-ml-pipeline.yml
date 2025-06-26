@@ -90,7 +90,7 @@ jobs:
       - name: Dependency vulnerability scan - Generate text
         run: |
           pip install -r src/lambda_functions/generate_text/requirements.txt
-          safety check --json --output safety-generate-report.json
+          safety check --output json --save-json safety-generate-report.json
           safety check
           echo "✅ Generate text dependencies scan passed"
 
