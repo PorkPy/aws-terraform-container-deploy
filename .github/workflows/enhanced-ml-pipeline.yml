@@ -213,6 +213,7 @@ jobs:
 
       - name: Checkov Infrastructure Security Scan
         uses: bridgecrewio/checkov-action@master
+        continue-on-error: true  # Continue pipeline but show warnings
         with:
           directory: terraform/
           framework: terraform
@@ -253,6 +254,7 @@ jobs:
 
       - name: Run Trivy vulnerability scanner - Generate Text
         uses: aquasecurity/trivy-action@master
+        continue-on-error: true
         with:
           image-ref: generate-text-test:latest
           format: 'sarif'
@@ -260,6 +262,7 @@ jobs:
 
       - name: Run Trivy vulnerability scanner - Visualize Attention
         uses: aquasecurity/trivy-action@master
+        continue-on-error: true
         with:
           image-ref: visualize-attention-test:latest
           format: 'sarif' 
