@@ -8,7 +8,7 @@ import os
 from unittest.mock import Mock, patch, MagicMock
 import torch
 import boto3
-from moto.s3 import mock_s3
+from moto import mock_aws
 
 @pytest.fixture
 def sample_pride_prejudice_text():
@@ -55,7 +55,7 @@ def mock_transformer_model():
 @pytest.fixture
 def mock_s3_client():
     """Mock S3 client for testing model downloads"""
-    with mock_s3():
+    with mock_aws():
         # Create mock S3 client
         s3_client = boto3.client('s3', region_name='eu-west-2')
         
