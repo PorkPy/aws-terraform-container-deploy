@@ -5,6 +5,10 @@ import pytest
 import json
 import os
 from unittest.mock import Mock, patch, MagicMock
+import sys
+# Add the Lambda function directories to Python path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../src/lambda_functions/generate_text'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../src/lambda_functions/visualize_attention'))
 
 class TestGenerateTextLambda:
     """Test the generate text Lambda handler"""
