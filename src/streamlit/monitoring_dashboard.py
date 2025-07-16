@@ -266,8 +266,20 @@ def display_performance_metrics():
                     y="Sum",
                     title=f"{func_name.split('-')[-2].title()} Function - Hourly Invocations",
                 )
+
+                # Force X-axis to show full 24 hours
+                end_time = datetime.now(timezone.utc)
+                start_time = end_time - timedelta(hours=24)
+
                 fig.update_layout(
-                    xaxis_title="Time (UTC)", yaxis_title="Number of Invocations", showlegend=False
+                    xaxis_title="Time (UTC)", 
+                    yaxis_title="Number of Invocations", 
+                    showlegend=False,
+                    xaxis=dict(
+                        range=[start_time, end_time],  # Force 24-hour range
+                        dtick=3600000,  # Tick every hour (in milliseconds)
+                        tickformat="%H:%M"  # Show hours:minutes
+                    )
                 )
                 fig.update_traces(marker_color="lightblue")
                 st.plotly_chart(fig, use_container_width=True)
