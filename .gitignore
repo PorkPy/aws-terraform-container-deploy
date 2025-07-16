@@ -47,6 +47,9 @@ pandas/
 PIL/
 Pillow/
 
+# ML model files
+*.pt
+
 # Terraform
 **/.terraform/*
 .terraform/
