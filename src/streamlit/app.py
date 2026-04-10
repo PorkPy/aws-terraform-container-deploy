@@ -3,7 +3,7 @@ import requests
 import json
 import base64
 from io import BytesIO
-from PIL import Image
+from PIL import Imageh
 import time
 import threading
 
@@ -225,11 +225,6 @@ def show_home_page():
         Perfect for understanding the complete production infrastructure.
         """)
 
-    with col2:
-        st.markdown("### 🔄 Request Flow & Execution")h
-cicd_deployment_pipeline.png    st.header("🧠 Model Architecture & Attention Mechanism")
-CI/CD deployment pipeline: from code push through GitHub Actions and Terraform to live AWS infrastructure    st.markdown("### 🏗️ Transformer Architecture")
-    col1, col2, col3 = st.columns([0.5, 3, 0.5])
     with col2:
         st.image("{ASSETS_BASE_URL}model_transformer_architecture.png", 
                 caption="4-layer encoder-only transformer architecture trained on Pride and Prejudice",
