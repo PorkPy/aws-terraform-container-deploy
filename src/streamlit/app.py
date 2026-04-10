@@ -226,7 +226,7 @@ def show_home_page():
         """)
 
     with col2:
-        st.image("{ASSETS_BASE_URL}model_transformer_architecture.png", 
+        st.image(f"{ASSETS_BASE_URL}model_transformer_architecture.png", 
                 caption="4-layer encoder-only transformer architecture trained on Pride and Prejudice",
                 use_container_width=True)
             
