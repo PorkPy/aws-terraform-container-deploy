@@ -28,7 +28,13 @@ def lambda_handler(event, context):
             
         text = body.get('text', 'Hello, world!')
         layer = int(body.get('layer', 0))
-        head = int(body.get('head', 0))
+        heads = body.get('heads', None)
+        if heads is not None:
+            # New multi-head format from updated app
+            head = heads[0] if isinstance(heads, list) else int(heads)
+        else:
+            head = int(body.get('head', 0))
+            heads = [head]
         
         # Handle warmup requests
         if text == "warmup":
@@ -115,7 +121,7 @@ def lambda_handler(event, context):
             tokens = [tokenizer.idx_to_word.get(idx, '<UNK>') for idx in input_ids]
             print(f"DEBUG: tokens: {tokens}")
             
-            attention_image = visualize_attention(tokens, attentions, layer, head)
+            attention_image = visualize_attention(tokens, attentions, layer, heads)
             
             if attention_image is None:
                 raise Exception("Visualization failed - returned None")
@@ -148,63 +154,70 @@ def lambda_handler(event, context):
             })
         }
 
-def visualize_attention(tokens, attentions, layer=0, head=0):
+def visualize_attention(tokens, attentions, layer=0, heads=None):
     """Create an attention visualization image as a base64 string."""
     try:
-        # Ensure layer and head indices are valid
+        if heads is None:
+            heads = [0]
+        if isinstance(heads, int):
+            heads = [heads]
+
         if layer >= len(attentions):
             layer = 0
-        
+
         attention_tensor = attentions[layer]
         print(f"DEBUG: attention_tensor shape: {attention_tensor.shape}")
-        print(f"DEBUG: attention_tensor type: {type(attention_tensor)}")
-        
-        if len(attention_tensor.shape) == 4:  # [batch, heads, seq, seq]
-            if head >= attention_tensor.shape[1]:
-                head = 0
-            print(f"DEBUG: Using 4D tensor, extracting [0, {head}]")
-            attention = attention_tensor[0, head].cpu().numpy()
+
+        # Validate heads
+        max_heads = attention_tensor.shape[1] if len(attention_tensor.shape) == 4 else 1
+        heads = [h for h in heads if h < max_heads]
+        if not heads:
+            heads = [0]
+
+        n_heads = len(heads)
+
+        if n_heads == 1:
+            fig, axes = plt.subplots(1, 1, figsize=(8, 8))
+            axes = [axes]
+        elif n_heads <= 4:
+            fig, axes = plt.subplots(2, 2, figsize=(14, 14))
+            axes = axes.flatten()
         else:
-            print(f"DEBUG: Using non-4D tensor, extracting [0]")
-            attention = attention_tensor[0].cpu().numpy()
-        
-        print(f"DEBUG: attention array shape: {attention.shape}")
-        print(f"DEBUG: attention array type: {type(attention)}")
-        
-        fig, ax = plt.subplots(figsize=(10, 10))
-        print("DEBUG: Created matplotlib figure")
-        
-        im = ax.imshow(attention, cmap='Blues')
-        print("DEBUG: Created imshow")
-        
-        # Set ticks and labels
-        ax.set_xticks(range(len(tokens)))
-        ax.set_yticks(range(len(tokens)))
-        ax.set_xticklabels(tokens, rotation=45, ha='right')
-        ax.set_yticklabels(tokens)
-        print("DEBUG: Set ticks and labels")
-        
-        ax.set_title(f"Attention Layer {layer+1}, Head {head+1}")
-        ax.set_xlabel("Key")
-        ax.set_ylabel("Query")
-        print("DEBUG: Set titles and labels")
-        
-        plt.colorbar(im, ax=ax)
+            fig, axes = plt.subplots(2, 4, figsize=(24, 14))
+            axes = axes.flatten()
+
+        for i, head in enumerate(heads):
+            ax = axes[i]
+            if len(attention_tensor.shape) == 4:
+                attention = attention_tensor[0, head].cpu().numpy()
+            else:
+                attention = attention_tensor[0].cpu().numpy()
+
+            im = ax.imshow(attention, cmap='Blues')
+            ax.set_xticks(range(len(tokens)))
+            ax.set_yticks(range(len(tokens)))
+            ax.set_xticklabels(tokens, rotation=45, ha='right', fontsize=9)
+            ax.set_yticklabels(tokens, fontsize=9)
+            ax.set_title(f"Layer {layer+1}, Head {head+1}")
+            ax.set_xlabel("Key")
+            ax.set_ylabel("Query")
+            plt.colorbar(im, ax=ax)
+
+        # Hide any unused axes
+        for j in range(i+1, len(axes)):
+            axes[j].set_visible(False)
+
+        fig.suptitle(f"Attention Weights — Layer {layer+1}", fontsize=14, fontweight='bold')
         plt.tight_layout()
-        print("DEBUG: Added colorbar and tight layout")
-        
-        # Convert plot to base64 string
+
         buffer = BytesIO()
         plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
         buffer.seek(0)
-        print("DEBUG: Saved figure to buffer")
-        
         image_base64 = base64.b64encode(buffer.read()).decode('utf-8')
         plt.close(fig)
-        print("DEBUG: Converted to base64 and closed figure")
-        
+
         return image_base64
-        
+
     except Exception as e:
         print(f"Visualization error details: {e}")
         print(f"Error type: {type(e)}")
