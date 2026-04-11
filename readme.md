@@ -21,8 +21,8 @@ The model at the centre is a **custom transformer language model built from scra
 - Managing all infrastructure as code with Terraform
 - Automating the entire build, test, and deploy cycle with GitHub Actions CI/CD
 - Storing model artefacts and static assets in S3
-- Monitoring latency, cost, and error rates in real time via CloudWatch
-- Presenting everything through a Streamlit front-end with attention visualisation
+- Surfacing real-time CloudWatch data (latency, cost, error rates, invocation counts) directly in the Streamlit app as a live monitoring dashboard
+- Presenting everything through a Streamlit front-end with attention visualisations
 
 ---
 
@@ -43,6 +43,24 @@ The **deployment pipeline** is fully automated. A push to the main branch trigge
 
 ### Attention Mechanism
 ![Attention Mechanism](https://transformer-model-artifacts-q3ukv7.s3.eu-west-2.amazonaws.com/static-assets/model_attention_mechanism.png)
+
+---
+
+## Monitoring Dashboard
+
+The Streamlit app doubles as a live operations dashboard, pulling real metrics directly from CloudWatch. This is not mocked data — it reflects the actual state of the deployed system.
+
+The dashboard covers four areas:
+
+**Performance metrics** — end-to-end latency per request, Lambda execution duration, and token generation speed broken down by invocation.
+
+**System health** — Lambda cold start frequency, warm vs cold invocation ratio, memory utilisation, and API Gateway error rates.
+
+**Cost analysis** — real-time AWS billing data showing cost per request, projected monthly spend based on current usage patterns, and a breakdown by service (Lambda compute, API Gateway calls, S3 storage and transfer).
+
+**Error logging** — recent CloudWatch log events surfaced directly in the UI, so failures are visible without needing to open the AWS console.
+
+This demonstrates that ML deployment is not just about getting the model running — it is about maintaining visibility over a live system and being able to diagnose issues without leaving the application.
 
 ---
 
@@ -80,7 +98,7 @@ The attention visualisation feature in the Streamlit app lets you see exactly wh
 | Monitoring | Amazon CloudWatch |
 | Infrastructure as Code | Terraform |
 | CI/CD | GitHub Actions |
-| Front-end | Streamlit |
+| Front-end & Monitoring | Streamlit (text generation, attention visualisation, and live monitoring dashboard) |
 | Deployment target | Streamlit Cloud |
 
 ---
