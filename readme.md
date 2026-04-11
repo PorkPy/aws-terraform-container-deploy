@@ -26,6 +26,18 @@ The model at the centre is a **custom transformer language model built from scra
 
 ---
 
+## How It Works End to End
+
+1. A developer pushes code to the `main` branch
+2. GitHub Actions triggers: installs dependencies, runs tests, builds Docker image
+3. The image is pushed to Amazon ECR
+4. The trained model artefact is uploaded to S3
+5. Terraform provisions or updates Lambda functions, API Gateway routes, IAM roles, and CloudWatch alarms
+6. The Streamlit app calls the live Lambda endpoints for inference
+7. CloudWatch captures latency, invocation counts, errors, and cost in real time
+
+---
+
 ## Architecture
 
 ### Full System Overview
@@ -103,6 +115,21 @@ The attention visualisation feature in the Streamlit app lets you see exactly wh
 
 ---
 
+## Why This Approach
+
+Swapping out the Pride and Prejudice model for a production-grade LLM would require changing one file. The deployment infrastructure, the CI/CD pipeline, the monitoring, the IaC — none of it changes. That is the point of this project: to show that the hard engineering work of getting a model into production is model-agnostic, and that doing it properly from the start means scaling up is just a matter of upgrading what goes in the box.
+
+---
+
+## What I Would Do Differently
+
+- **Model quality**: With more training data and compute, the same architecture would produce significantly better outputs. The current model is a demo vehicle, not a production model.
+- **Authentication**: The API endpoints are currently open. A production system would add API key validation at the Gateway level.
+- **Async inference**: Lambda is synchronous here. For longer generation tasks, an SQS queue with async Lambda invocation would be more appropriate.
+- **Model versioning**: S3 holds a single model artefact. A proper MLflow or SageMaker Model Registry integration would enable versioned rollbacks.
+
+---
+
 ## Repository Structure
 
 transformer-aws-deployment/\
@@ -134,33 +161,6 @@ transformer-aws-deployment/\
 │   └── workflows/\
 │       └── deploy.yml       # GitHub Actions workflow (optional)\
 └── README.md\
-
----
-
-## How It Works End to End
-
-1. A developer pushes code to the `main` branch
-2. GitHub Actions triggers: installs dependencies, runs tests, builds Docker image
-3. The image is pushed to Amazon ECR
-4. The trained model artefact is uploaded to S3
-5. Terraform provisions or updates Lambda functions, API Gateway routes, IAM roles, and CloudWatch alarms
-6. The Streamlit app calls the live Lambda endpoints for inference
-7. CloudWatch captures latency, invocation counts, errors, and cost in real time
-
----
-
-## Why This Approach
-
-Swapping out the Pride and Prejudice model for a production-grade LLM would require changing one file. The deployment infrastructure, the CI/CD pipeline, the monitoring, the IaC — none of it changes. That is the point of this project: to show that the hard engineering work of getting a model into production is model-agnostic, and that doing it properly from the start means scaling up is just a matter of upgrading what goes in the box.
-
----
-
-## What I Would Do Differently
-
-- **Model quality**: With more training data and compute, the same architecture would produce significantly better outputs. The current model is a demo vehicle, not a production model.
-- **Authentication**: The API endpoints are currently open. A production system would add API key validation at the Gateway level.
-- **Async inference**: Lambda is synchronous here. For longer generation tasks, an SQS queue with async Lambda invocation would be more appropriate.
-- **Model versioning**: S3 holds a single model artefact. A proper MLflow or SageMaker Model Registry integration would enable versioned rollbacks.
 
 ---
 
