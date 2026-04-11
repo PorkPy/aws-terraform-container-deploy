@@ -215,8 +215,8 @@ def show_home_page():
     col1, col2 = st.columns(2)
     with col1:
         st.markdown("### 📊 Complete System Overview")
-        st.image(f"{ASSETS_BASE_URL}AWS_1.png", 
-                 caption="Complete AWS serverless infrastructure with all components",
+        st.image(f"{ASSETS_BASE_URL}arch_aws_full_system_overview.png", 
+                 caption="Runtime ML pipeline and CI/CD deployment pipeline on AWS serverless infrastructure",
                  use_container_width=True)
         
         st.markdown("""
@@ -226,28 +226,8 @@ def show_home_page():
         """)
 
     with col2:
-        st.markdown("### 🔄 Request Flow & Execution")
-        st.image(f"{ASSETS_BASE_URL}AWS_2.png", 
-                 caption="Detailed request flow showing cold start and warm execution paths",
-                 use_container_width=True)
-        
-        st.markdown("""
-        **What you're seeing:** Step-by-step request flow from user interaction to model inference. 
-        Shows both cold start (first request) and warm execution paths, plus VPC security boundaries.
-        Technical teams love this level of detail.
-        """)
-
-    st.markdown("---")
-
-
-    # Model Architecture Section
-    st.header("🧠 Model Architecture & Attention Mechanism")
-
-    st.markdown("### 🏗️ Transformer Architecture")
-    col1, col2, col3 = st.columns([0.5, 3, 0.5])
-    with col2:
-        st.image("https://jalammar.github.io/images/t/transformer_resideual_layer_norm_3.png", 
-                caption="Multi-layer transformer with residual connections - Source: The Illustrated Transformer",
+        st.image(f"{ASSETS_BASE_URL}model_transformer_architecture.png", 
+                caption="4-layer encoder-only transformer architecture trained on Pride and Prejudice",
                 use_container_width=True)
             
     st.markdown("""
@@ -266,8 +246,8 @@ def show_home_page():
     st.markdown("### 👁️ Attention Mechanism Detail")
     col1, col2, col3 = st.columns([0.5, 3, 0.5])
     with col2:
-        st.image(f"{ASSETS_BASE_URL}attention_1.png", 
-                caption="How transformer attention works - Created with Sora AI",
+        st.image(f"{ASSETS_BASE_URL}model_attention_mechanism.png", 
+                caption="Attention mechanism: Q/K/V computation, multi-head attention, and token attention heatmap",
                 use_container_width=True)
             
     st.markdown("""
@@ -298,8 +278,8 @@ def show_home_page():
     # Use columns to constrain width
     col1, col2, col3 = st.columns([0.5, 3, 0.5])
     with col2:
-        st.image(f"{ASSETS_BASE_URL}pipeline_1.png", 
-                caption="End-to-end machine learning pipeline from development to production",
+        st.image(f"{ASSETS_BASE_URL}cicd_deployment_pipeline.png", 
+                caption="CI/CD deployment pipeline: from code push through GitHub Actions and Terraform to live AWS infrastructure",
                 use_container_width=True)
 
     st.markdown("""
