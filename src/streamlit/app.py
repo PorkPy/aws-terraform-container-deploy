@@ -12,7 +12,7 @@ from monitoring_dashboard import main_monitoring
 
 # Page config
 st.set_page_config(
-    page_title="Custom ML Model Production",
+    page_title="End-to-End Machine Learning Deployment — From Code to Live Production System",
     page_icon="🤖",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -186,7 +186,7 @@ def show_home_page():
     st.markdown("""
     <div class="main-header">
         <h1>Custom ML Model Productionisation</h1>
-        <p>Complete end-to-end machine learning pipeline automated on GitHub using Terraform IaC and hosted on AWS serverless infrastructure feeding a Streamlit app front-end</p>
+        <p>Automated CI/CD pipeline · AWS serverless infrastructure · Terraform IaC · PyTorch transformer model</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -194,21 +194,19 @@ def show_home_page():
     st.header("📋 Project Overview")
     
     st.markdown("""
-    This project demonstrates a **complete machine learning production pipeline** showcasing the full journey from model development to scalable deployment. 
-    
-    At its core is a **custom transformer language model trained from scratch** using only Jane Austen's "Pride and Prejudice" as the training corpus. 
-    Whilst this creates a deliberately limited vocabulary model, it serves as an ideal demonstration piece showing that I can:
-    
-    - **Build neural networks from first principles** - implementing transformer architecture, attention mechanisms, and training loops
-    - **Deploy models at scale** - containerising PyTorch models and orchestrating AWS infrastructure 
-    - **Automate entire pipelines** - from code push through GitHub Actions to live AWS deployment
-    - **Optimise for cost and performance** - using serverless architecture with real-time monitoring
-    
-    The emphasis here isn't on creating the world's best language model, but rather demonstrating **production ML engineering capabilities** 
-    that translate to any model architecture or business domain. The monitoring dashboard shows real AWS costs and performance metrics, 
-    proving this isn't just a toy project but a genuinely deployed production system.
-    """)
-    
+    This project is a deliberate showcase of production ML engineering, not model quality. The transformer language model at its core is intentionally simple — 
+    built from scratch in pure PyTorch and trained only on Jane Austen's Pride and Prejudice — because keeping the model lightweight and transparent puts the 
+    focus entirely where it belongs: on the deployment pipeline, infrastructure automation, performance monitoring, and cost analysis that make up real-world ML engineering.
+    The same infrastructure would deploy any model. The point is that it's genuinely running in production — on AWS Lambda, behind API Gateway, provisioned by 
+    Terraform, deployed automatically via GitHub Actions CI/CD, and monitored in real time through CloudWatch
+        
+       **What this demonstrates:**
+    - **Production deployment** — containerised PyTorch model on AWS Lambda behind API Gateway
+    - **Infrastructure as Code** — full Terraform provisioning, reproducible and version controlled  
+    - **CI/CD automation** — code push to live deployment via GitHub Actions, no manual steps
+    - **Observability** — real-time CloudWatch metrics for latency, cost, and errors surfaced in the app
+    - **ML fundamentals** — transformer architecture, attention mechanisms, and training loops built from scratch in PyTorch
+        
     # Architecture Diagrams
     st.header("🏗️ System Architecture")
 
