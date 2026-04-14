@@ -488,7 +488,7 @@ def get_cost_data():
 
 def display_cost_analysis():
     """Display comprehensive cost analysis"""
-    st.header("💰 AWS Cost Analysis")
+    st.header("AWS Cost Analysis")
     
     cost_data = get_cost_data()
     if not cost_data:
@@ -647,7 +647,7 @@ def display_cost_analysis():
         
         with col1:
             st.markdown("""
-            **💡 Cost Optimisation Insights:**
+            **Cost Optimisation Insights:**
             
             🔍 **Top Cost Drivers:**
             """)
@@ -664,11 +664,11 @@ def display_cost_analysis():
             """)
             
             if cost_change_pct > 10:
-                st.warning(f"⚠️ Costs increased by {cost_change_pct:.1f}% this month")
+                st.warning(f"Costs increased by {cost_change_pct:.1f}% this month")
             elif cost_change_pct > 0:
-                st.info(f"📊 Costs increased by {cost_change_pct:.1f}% this month")
+                st.info(f"Costs increased by {cost_change_pct:.1f}% this month")
             else:
-                st.success(f"✅ Costs decreased by {abs(cost_change_pct):.1f}% this month")
+                st.success(f"Costs decreased by {abs(cost_change_pct):.1f}% this month")
             
             # Daily burn rate
             days_elapsed = datetime.now().day
@@ -677,7 +677,7 @@ def display_cost_analysis():
         
         # Cost predictions and recommendations
         st.markdown("---")
-        st.markdown("**🎯 Recommendations:**")
+        st.markdown("**Recommendations:**")
         
         recommendations = []
         
@@ -703,7 +703,7 @@ def display_cost_analysis():
 
 def main_monitoring():
     """Main monitoring dashboard"""
-    st.title("🔍 AWS Lambda Monitoring Dashboard")
+    st.title("AWS Lambda Monitoring Dashboard")
     st.markdown("*Real-time monitoring of transformer model infrastructure*")
     st.markdown("---")
     
