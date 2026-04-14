@@ -676,4 +676,9 @@ elif page == "🚀 Text Generation":
 elif page == "👁️ Attention Visualisation":
     show_attention_visualisation_page()
 elif page == "🔍 System Monitoring":
-    main_monitoring()
+    try:
+        main_monitoring()
+    except Exception as e:
+        st.error("⚠️ Monitoring dashboard failed to load.")
+        st.markdown(f"**Error:** `{e}`")
+        st.markdown("This is likely a temporary issue with the CloudWatch connection. Try refreshing the page.")
