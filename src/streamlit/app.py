@@ -671,7 +671,12 @@ def show_attention_visualisation_page():
 page = st.session_state.current_page
 
 if page == "Home & Overview":
+    st.components.v1.html(
+        '<script>window.parent.document.querySelector("section.main").scrollTo(0, 0);</script>',
+        height=0
+    )
     show_home_page()
+
 elif page == "Text Generation":
     show_text_generation_page()
 elif page == "Attention Visualisation":
