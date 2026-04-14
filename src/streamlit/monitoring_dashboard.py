@@ -714,14 +714,18 @@ def main_monitoring():
     with col2:
         auto_refresh = st.checkbox("Auto-refresh (30s)")
     with col3:
-        if st.button("🔄 Refresh Now"):
+        if st.button("Refresh Now"):
+            st.cache_data.clear()
             st.rerun()
     
-    # Auto-refresh logic
+    # Auto-refresh logic - use timestamp instead of sleep
     if auto_refresh:
-        time.sleep(30)
-        st.rerun()
-    
+        if 'last_refresh' not in st.session_state:
+            st.session_state.last_refresh = time.time()
+        if time.time() - st.session_state.last_refresh > 30:
+            st.session_state.last_refresh = time.time()
+            st.rerun()
+            
     # Display sections
     display_system_health()
     st.markdown("---")
