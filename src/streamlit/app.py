@@ -206,7 +206,8 @@ def show_home_page():
     - **CI/CD automation** — code push to live deployment via GitHub Actions, no manual steps
     - **Observability** — real-time CloudWatch metrics for latency, cost, and errors surfaced in the app
     - **ML fundamentals** — transformer architecture, attention mechanisms, and training loops built from scratch in PyTorch
-        
+    """)
+    
     # Architecture Diagrams
     st.header("🏗️ System Architecture")
 
