@@ -228,19 +228,14 @@ def show_home_page():
         st.image(f"{ASSETS_BASE_URL}model_transformer_architecture.png", 
                 caption="4-layer encoder-only transformer architecture trained on Pride and Prejudice",
                 use_container_width=True)
-            
-    st.markdown("""
-    **What you're seeing:** This transformer architecture is very similar to what I built, 
-    showing the key components: multi-head attention, feed-forward networks, and residual 
-    connections. The main differences from my implementation are:
-
-    - **Layers:** This shows 2 layers vs my 4-layer model
-    - **Dimensions:** Standard 512d vs my 256d embeddings  
-    - **Architecture:** This is encoder-decoder vs my encoder-only design
-    - **Training:** Standard pre-training vs my Pride and Prejudice corpus
-
-    The core concepts (attention, residuals, layer norms) are identical.
-    """)
+                
+        st.markdown("""
+        **What you're seeing:** Transformer architecture — a 4-layer encoder-only model 
+        with 256-dimensional embeddings and 8 attention heads, trained on Pride and Prejudice. 
+        Every component shown — the multi-head self-attention, feed-forward layers, residual 
+        connections, and layer normalisation — is implemented from scratch in PyTorch and 
+        running live in this deployment.
+        """)
 
     st.markdown("### 👁️ Attention Mechanism Detail")
     col1, col2, col3 = st.columns([0.5, 3, 0.5])
