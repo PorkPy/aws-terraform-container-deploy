@@ -245,23 +245,20 @@ def show_home_page():
                 use_container_width=True)
             
     st.markdown("""
-    **What you're seeing:** Detailed breakdown of transformer attention mechanisms, from 
-    input tokens through Q/K/V computation to final attention heatmaps. This diagram was 
-    created using Sora AI to illustrate the concepts clearly.
-
-    **Technical Accuracy Notes:**
-    - The core attention flow and mathematical formulas are correct
-    - Shows the right tensor dimensions and multi-head structure
-    - Some visual artifacts (unusual symbols, formatting) are AI-generated quirks
-    - The essential concepts match my implementation: 8 heads, matrix operations, softmax attention
-
-    **Key Components Explained:**
-    - **Single Attention Head:** Shows Q, K, V matrix creation and scaled dot-product
-    - **Multi-Head Attention:** Demonstrates parallel processing across 8 heads
-    - **Heatmap Visualisation:** How attention weights create the patterns you see in the demo
-
-    This illustrates the same attention mechanism implemented in my model, scaled to show 
-    the mathematical operations clearly.
+    **What you're seeing:** The attention mechanism at the heart of the transformer — 
+    showing how each token learns which other tokens to attend to when building its 
+    contextual representation.
+    
+    The diagram shows three things:
+    - **Single attention head** — how Query, K, and Value matrices are computed from the 
+      input and combined via scaled dot-product attention
+    - **Multi-head attention** — how 8 heads run in parallel, each learning different 
+      relationship patterns, before being concatenated and projected
+    - **Attention heatmap** — the actual weight matrix showing which token pairs attend 
+      to each other most strongly
+    
+    This is the exact mechanism running in the live model. The heatmap in the 
+    Attention Visualisation tab shows real weights from your input text.
     """)
 
     st.markdown("---")
