@@ -101,7 +101,7 @@ for option in nav_options:
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("""
-<div style='text-align: center; colour: #888; font-size: 0.8rem;'>
+<div style='text-align: center; color: #888; font-size: 0.8rem;'>
     <p>Built with Streamlit<br>
     Powered by AWS Lambda<br>
     Infrastructure as Code</p>
