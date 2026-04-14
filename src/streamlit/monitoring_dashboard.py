@@ -227,7 +227,7 @@ def get_recent_logs():
 
 def display_system_health():
     """Display system health overview"""
-    st.header("🏥 System Health Overview")
+    st.header("System Health Overview")
     
     # Check AWS credentials first
     creds_ok, creds_msg = check_aws_credentials()
@@ -265,7 +265,7 @@ def display_system_health():
 
 def display_performance_metrics():
     """Display performance metrics and charts"""
-    st.header("📊 Performance Metrics (Last 24 Hours)")
+    st.header("Performance Metrics (Last 24 Hours)")
     
     metrics_data = get_cloudwatch_metrics()
     
@@ -369,7 +369,7 @@ def display_performance_metrics():
 
 def display_recent_logs():
     """Display recent logs"""
-    st.header("📝 Recent Logs (Last Hour)")
+    st.header("Recent Logs (Last Hour)")
     
     recent_logs = get_recent_logs()
     
