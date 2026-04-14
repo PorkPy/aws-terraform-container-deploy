@@ -278,11 +278,11 @@ def show_home_page():
     Shows how code moves from local development through automated CI/CD to cost-optimised production infrastructure.
 
     **Key Highlights:**
-    - ** FinOps Integration:** Real-time cost monitoring and optimisation throughout the pipeline
-    - ** Automation Flow:** GitHub Actions → Docker → ECR → Terraform → AWS Lambda  
-    - ** Cost Efficiency:** Serverless architecture minimises idle costs, with monitoring and alerts
-    - ** Feedback Loop:** Performance and cost metrics inform continuous optimisation
-    - ** Speed:** Most deployments complete in under an hour with zero downtime
+    - **FinOps Integration:** Real-time cost monitoring and optimisation throughout the pipeline
+    - **Automation Flow:** GitHub Actions → Docker → ECR → Terraform → AWS Lambda  
+    - **Cost Efficiency:** Serverless architecture minimises idle costs, with monitoring and alerts
+    - **Feedback Loop:** Performance and cost metrics inform continuous optimisation
+    - **Speed:** Most deployments complete in under an hour with zero downtime
 
     **FinOps Benefits:**
     - Pay-per-request Lambda pricing (no idle costs)
