@@ -82,14 +82,14 @@ st.sidebar.markdown("---")
 
 # Initialize session state for navigation
 if 'current_page' not in st.session_state:
-    st.session_state.current_page = "🏠 Home & Overview"
+    st.session_state.current_page = "Home & Overview"
 
 # Navigation buttons
 nav_options = [
-    "🏠 Home & Overview",
-    "🚀 Text Generation", 
-    "👁️ Attention Visualisation",
-    "🔍 System Monitoring"
+    "Home & Overview",
+    "Text Generation", 
+    "Attention Visualisation",
+    "System Monitoring"
 ]
 
 st.sidebar.markdown("**Navigate to:**")
@@ -191,7 +191,7 @@ def show_home_page():
     """, unsafe_allow_html=True)
     
     # Project Overview
-    st.header("📋 Project Overview")
+    st.header("Project Overview")
     
     st.markdown("""
     This project is a deliberate showcase of production ML engineering, not model quality. The transformer language model at its core is intentionally simple — 
@@ -209,11 +209,11 @@ def show_home_page():
     """)
     
     # Architecture Diagrams
-    st.header("🏗️ System Architecture")
+    st.header("System Architecture")
 
     col1, col2 = st.columns(2)
     with col1:
-        st.markdown("### 📊 Complete System Overview")
+        st.markdown("### Complete System Overview")
         st.image(f"{ASSETS_BASE_URL}arch_aws_full_system_overview.png", 
                  caption="Runtime ML pipeline and CI/CD deployment pipeline on AWS serverless infrastructure",
                  use_container_width=True)
@@ -237,7 +237,7 @@ def show_home_page():
         running live in this deployment.
         """)
 
-    st.markdown("### 👁️ Attention Mechanism Detail")
+    st.markdown("### Attention Mechanism Detail")
     col1, col2, col3 = st.columns([0.5, 3, 0.5])
     with col2:
         st.image(f"{ASSETS_BASE_URL}model_attention_mechanism.png", 
@@ -264,7 +264,7 @@ def show_home_page():
     st.markdown("---")
 
     # Pipeline Diagram Section  
-    st.header("🔄 Complete MLOps Pipeline")
+    st.header("Complete MLOps Pipeline")
 
     # Use columns to constrain width
     col1, col2, col3 = st.columns([0.5, 3, 0.5])
@@ -278,11 +278,11 @@ def show_home_page():
     Shows how code moves from local development through automated CI/CD to cost-optimised production infrastructure.
 
     **Key Highlights:**
-    - **🏦 FinOps Integration:** Real-time cost monitoring and optimisation throughout the pipeline
-    - **⚡ Automation Flow:** GitHub Actions → Docker → ECR → Terraform → AWS Lambda  
-    - **💰 Cost Efficiency:** Serverless architecture minimises idle costs, with monitoring and alerts
-    - **🔄 Feedback Loop:** Performance and cost metrics inform continuous optimisation
-    - **⏱️ Speed:** Most deployments complete in under an hour with zero downtime
+    - ** FinOps Integration:** Real-time cost monitoring and optimisation throughout the pipeline
+    - ** Automation Flow:** GitHub Actions → Docker → ECR → Terraform → AWS Lambda  
+    - ** Cost Efficiency:** Serverless architecture minimises idle costs, with monitoring and alerts
+    - ** Feedback Loop:** Performance and cost metrics inform continuous optimisation
+    - ** Speed:** Most deployments complete in under an hour with zero downtime
 
     **FinOps Benefits:**
     - Pay-per-request Lambda pricing (no idle costs)
@@ -297,32 +297,32 @@ def show_home_page():
         st.markdown("""
         ### What You Can Explore:
         
-        **🚀 Text Generation**: Generate creative text continuations using the transformer model trained on Pride and Prejudice
+        ** Text Generation**: Generate creative text continuations using the transformer model trained on Pride and Prejudice
         
-        **👁️ Attention Visualisation**: Explore how the model "pays attention" to different words across multiple heads and layers
+        ** Attention Visualisation**: Explore how the model "pays attention" to different words across multiple heads and layers
         
-        **🔍 System Monitoring**: View real-time performance metrics and AWS costs for the production deployment
+        ** System Monitoring**: View real-time performance metrics and AWS costs for the production deployment
         """)
     col1, col2, col3 = st.columns([1, 1, 1])
     
     with col1:
         st.markdown("""
         <div class="metric-card">
-            <h3>⚡ Performance</h3>
+            <h3> Performance</h3>
             <p>Real-time metrics</p>
         </div>
         """, unsafe_allow_html=True)
 
         st.markdown("""
         <div class="metric-card">
-            <h3>💰 Cost</h3>
+            <h3> Cost</h3>
             <p>Live AWS billing</p>
         </div>
         """, unsafe_allow_html=True)
 
         st.markdown("""
         <div class="metric-card">
-            <h3>🔧 Monitoring</h3>
+            <h3> Monitoring</h3>
             <p>CloudWatch integration</p>
         </div>
         """, unsafe_allow_html=True)
@@ -330,14 +330,14 @@ def show_home_page():
     st.markdown("---")
     
     # Technical Architecture
-    st.header("🏗️ Technical Implementation")
+    st.header(" Technical Implementation")
     
     col1, col2, col3 = st.columns(3)
     
     with col1:
         st.markdown("""
         <div class="feature-card">
-            <h4>🧠 ML Model</h4>
+            <h4> ML Model</h4>
             <ul>
                 <li>Custom transformer architecture</li>
                 <li>4 layers, 8 attention heads</li>
@@ -351,7 +351,7 @@ def show_home_page():
     with col2:
         st.markdown("""
         <div class="feature-card">
-            <h4>☁️ AWS Infrastructure</h4>
+            <h4> AWS Infrastructure</h4>
             <ul>
                 <li>Lambda containers (PyTorch)</li>
                 <li>API Gateway endpoints</li>
@@ -365,7 +365,7 @@ def show_home_page():
     with col3:
         st.markdown("""
         <div class="feature-card">
-            <h4>🔧 DevOps Pipeline</h4>
+            <h4> DevOps Pipeline</h4>
             <ul>
                 <li>Terraform Infrastructure as Code</li>
                 <li>GitHub Actions CI/CD</li>
@@ -378,20 +378,20 @@ def show_home_page():
     
     # Model warmup status
     st.markdown("---")
-    st.header("🔥 System Status")
+    st.header(" System Status")
     check_warmup_status()
 
 def show_text_generation_page():
     """Text generation page"""
     st.markdown("""
     <div class="main-header">
-        <h1>🚀 Text Generation</h1>
+        <h1> Text Generation</h1>
         <p>Generate creative text continuations using a custom transformer model</p>
     </div>
     """, unsafe_allow_html=True)
     
     # How it works section
-    how_it_works = st.expander("🧠 **How Transformer Text Generation Works**", expanded=False)
+    how_it_works = st.expander(" **How Transformer Text Generation Works**", expanded=False)
     with how_it_works:
         st.markdown("""
         ### The Transformer Architecture
@@ -419,7 +419,7 @@ def show_text_generation_page():
     
     if models_ready:
         # Text generation interface
-        st.header("✍️ Generate Text")
+        st.header("Generate Text")
         
         col1, col2 = st.columns([2, 1])
         
@@ -466,9 +466,9 @@ def show_text_generation_page():
                 help="Consider only the k most likely next tokens"
             )
         
-        if st.button("🚀 Generate Text", type="primary", use_container_width=True):
+        if st.button("Generate Text", type="primary", use_container_width=True):
             if prompt.strip():
-                with st.spinner("🤖 Generating text..."):
+                with st.spinner("Generating text..."):
                     start_time = time.time()
                     payload = {
                         "prompt": prompt,
@@ -481,24 +481,24 @@ def show_text_generation_page():
                     response_time = time.time() - start_time
                     
                     if result:
-                        st.success("✅ Generation Complete!")
+                        st.success("Generation Complete!")
                         
                         # Display results
-                        st.markdown("### 📝 Generated Text:")
+                        st.markdown("### Generated Text:")
                         st.markdown(f"**Input:** {prompt}")
                         st.markdown(f"**Generated:** {result.get('generated_text', 'No text generated')}")
                         
                         # Metrics
                         col1, col2, col3 = st.columns(3)
                         with col1:
-                            st.metric("⚡ Response Time", f"{response_time:.1f}s")
+                            st.metric("Response Time", f"{response_time:.1f}s")
                         with col2:
                             if "tokens_generated" in result:
-                                st.metric("🔢 Tokens Generated", result['tokens_generated'])
+                                st.metric("Tokens Generated", result['tokens_generated'])
                         with col3:
                             if result.get('tokens_generated', 0) > 0:
                                 tokens_per_sec = result['tokens_generated'] / response_time
-                                st.metric("🚀 Tokens/Second", f"{tokens_per_sec:.1f}")
+                                st.metric("Tokens/Second", f"{tokens_per_sec:.1f}")
                     else:
                         st.error(f"❌ {error}")
             else:
@@ -508,13 +508,13 @@ def show_attention_visualisation_page():
     """Attention visualisation page"""
     st.markdown("""
     <div class="main-header">
-        <h1>👁️ Attention Visualisation</h1>
+        <h1>Attention Visualisation</h1>
         <p>Explore how the transformer model pays attention to different words</p>
     </div>
     """, unsafe_allow_html=True)
     
     # How it works section
-    how_it_works = st.expander("🧠 **Understanding Attention Mechanisms**", expanded=False)
+    how_it_works = st.expander("**Understanding Attention Mechanisms**", expanded=False)
     with how_it_works:
         st.markdown("""
         ### What is Attention?
@@ -553,7 +553,7 @@ def show_attention_visualisation_page():
     
     if models_ready:
         # Attention visualisation interface
-        st.header("🔍 Visualise Attention")
+        st.header("Visualise Attention")
         
         col1, col2 = st.columns([2, 1])
         
@@ -567,7 +567,7 @@ def show_attention_visualisation_page():
         
         with col2:
             layer = st.selectbox(
-                "🏗️ Layer:",
+                "Layer:",
                 options=list(range(4)),
                 index=2,
                 help="Deeper layers capture more complex patterns",
@@ -576,7 +576,7 @@ def show_attention_visualisation_page():
             
             # Multi-head selection options
             head_mode = st.radio(
-                "👁️ Attention Heads:",
+                "Attention Heads:",
                 ["Single Head", "Multiple Heads (2x2)", "All Heads (4x2)"],
                 help="Choose how many attention heads to visualise simultaneously"
             )
@@ -594,11 +594,11 @@ def show_attention_visualisation_page():
             else:  # All Heads
                 heads_to_show = list(range(8))  # All 8 heads
             
-            st.info(f"💡 Analysing **Layer {layer+1}**, showing {len(heads_to_show)} head(s)")
+            st.info(f"Analysing **Layer {layer+1}**, showing {len(heads_to_show)} head(s)")
         
-        if st.button("🔍 Visualise Attention", type="primary", use_container_width=True):
+        if st.button("Visualise Attention", type="primary", use_container_width=True):
             if text_input.strip():
-                with st.spinner("🧠 Analysing attention patterns..."):
+                with st.spinner("Analysing attention patterns..."):
                     start_time = time.time()
                     payload = {
                         "text": text_input,
@@ -616,23 +616,23 @@ def show_attention_visualisation_page():
                             image_data = base64.b64decode(result["attention_image"])
                             image = Image.open(BytesIO(image_data))
                             
-                            st.markdown("### 🎨 Attention Heatmap:")
+                            st.markdown("### Attention Heatmap:")
                             st.image(image, use_container_width=True, 
                                    caption=f"Attention patterns for Layer {layer+1}, {len(heads_to_show)} head(s)")
                             
                             # Analysis info
                             col1, col2, col3 = st.columns(3)
                             with col1:
-                                st.metric("⚡ Analysis Time", f"{response_time:.1f}s")
+                                st.metric("Analysis Time", f"{response_time:.1f}s")
                             with col2:
                                 if "tokens" in result:
-                                    st.metric("🔤 Tokens Analysed", len(result['tokens']))
+                                    st.metric("Tokens Analysed", len(result['tokens']))
                             with col3:
-                                st.metric("🎯 Layer/Heads", f"{layer+1}/{len(heads_to_show)}")
+                                st.metric("Layer/Heads", f"{layer+1}/{len(heads_to_show)}")
                             
                             # Show tokenisation with explanation
                             if "tokens" in result:
-                                st.markdown("### 🔤 Tokenisation Analysis:")
+                                st.markdown("### Tokenisation Analysis:")
                                 
                                 # Show tokens
                                 tokens_display = " | ".join(result['tokens'])
@@ -662,13 +662,13 @@ def show_attention_visualisation_page():
 # Main app routing
 page = st.session_state.current_page
 
-if page == "🏠 Home & Overview":
+if page == "Home & Overview":
     show_home_page()
-elif page == "🚀 Text Generation":
+elif page == "Text Generation":
     show_text_generation_page()
-elif page == "👁️ Attention Visualisation":
+elif page == "Attention Visualisation":
     show_attention_visualisation_page()
-elif page == "🔍 System Monitoring":
+elif page == "System Monitoring":
     try:
         main_monitoring()
     except Exception as e:
