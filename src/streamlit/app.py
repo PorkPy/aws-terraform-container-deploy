@@ -312,14 +312,14 @@ def show_home_page():
             <p>Real-time metrics</p>
         </div>
         """, unsafe_allow_html=True)
-
+    with col2:
         st.markdown("""
         <div class="metric-card">
             <h3> Cost</h3>
             <p>Live AWS billing</p>
         </div>
         """, unsafe_allow_html=True)
-
+    with col3:
         st.markdown("""
         <div class="metric-card">
             <h3> Monitoring</h3>
