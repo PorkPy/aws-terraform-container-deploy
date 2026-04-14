@@ -375,11 +375,6 @@ def show_home_page():
             </ul>
         </div>
         """, unsafe_allow_html=True)
-    
-    # Model warmup status
-    st.markdown("---")
-    st.header(" System Status")
-    check_warmup_status()
 
 def show_text_generation_page():
     """Text generation page"""
