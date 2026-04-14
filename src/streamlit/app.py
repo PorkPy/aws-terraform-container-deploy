@@ -77,7 +77,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Modern sidebar navigation with buttons
-st.sidebar.markdown("# 🤖 **Custom ML Production**")
+st.sidebar.markdown("# **Custom ML Production**")
 st.sidebar.markdown("---")
 
 # Initialize session state for navigation
@@ -297,11 +297,11 @@ def show_home_page():
         st.markdown("""
         ### What You Can Explore:
         
-        ** Text Generation**: Generate creative text continuations using the transformer model trained on Pride and Prejudice
+        **Text Generation**: Generate creative text continuations using the transformer model trained on Pride and Prejudice
         
-        ** Attention Visualisation**: Explore how the model "pays attention" to different words across multiple heads and layers
+        **Attention Visualisation**: Explore how the model "pays attention" to different words across multiple heads and layers
         
-        ** System Monitoring**: View real-time performance metrics and AWS costs for the production deployment
+        **System Monitoring**: View real-time performance metrics and AWS costs for the production deployment
         """)
     col1, col2, col3 = st.columns([1, 1, 1])
     
