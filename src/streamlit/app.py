@@ -185,7 +185,7 @@ def show_home_page():
     """Home page with project overview"""
     st.markdown("""
     <div class="main-header">
-        <h1>End-to-End Machine Learning Deployment — From Code to Live Production System</h1>
+        <h1>End-to-End Machine Learning Deployment<br>From Code to Live Production System</h1>
         <p>Automated CI/CD pipeline · AWS serverless infrastructure · Terraform IaC · PyTorch transformer model</p>
     </div>
     """, unsafe_allow_html=True)
