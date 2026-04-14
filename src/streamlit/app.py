@@ -77,7 +77,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Modern sidebar navigation with buttons
-st.sidebar.markdown("# **Custom ML Production**")
+st.sidebar.markdown("# **Complete ML<br>Deployment Pipeline**")
 st.sidebar.markdown("---")
 
 # Initialize session state for navigation
