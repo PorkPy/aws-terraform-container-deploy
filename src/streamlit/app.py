@@ -131,7 +131,7 @@ def warm_up_lambdas():
                 timeout=1,
                 headers={"Content-Type": "application/json"}
             )
-        except:
+        except Exception:
             pass
 
 def call_api(endpoint, payload):
