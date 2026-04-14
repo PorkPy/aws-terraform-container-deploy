@@ -183,6 +183,14 @@ def check_warmup_status():
 
 def show_home_page():
     """Home page with project overview"""
+    st.components.v1.html(
+    """
+    <script>
+        window.parent.document.querySelector('section.main').scrollTo(0, 0);
+    </script>
+    """,
+    height=0
+    )
     st.markdown("""
     <div class="main-header">
         <h1>Custom ML Model Productionisation</h1>
