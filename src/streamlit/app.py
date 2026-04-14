@@ -655,6 +655,9 @@ def show_attention_visualisation_page():
                 st.warning("⚠️ Please enter text to analyse")
 
 # Main app routing
+# Clear URL hash on load
+st.query_params.clear()
+
 page = st.session_state.current_page
 if page == "Home & Overview":
     show_home_page()
