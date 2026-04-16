@@ -194,11 +194,17 @@ def show_home_page():
     st.header("Project Overview")
     
     st.markdown("""
-    This project is a deliberate showcase of production ML engineering, not model quality. The transformer language model at its core is intentionally simple — 
-    built from scratch in pure PyTorch and trained only on Jane Austen's Pride and Prejudice — because keeping the model lightweight and transparent puts the 
-    focus entirely where it belongs: on the deployment pipeline, infrastructure automation, performance monitoring, and cost analysis that make up real-world ML engineering.
-    The same infrastructure would deploy any model. The point is that it's genuinely running in production — on AWS Lambda, behind API Gateway, provisioned by 
-    Terraform, deployed automatically via GitHub Actions CI/CD, and monitored in real time through CloudWatch
+    Over 80% of machine learning projects never make it to production. Not because the models don't work — but because most data scientists don't know how to deploy them. 
+    The gap between a working notebook and a live, monitored, production-grade system is where the vast majority of ML investment dies.
+    This project exists to prove I can bridge that gap.
+    I built a custom transformer language model from scratch in raw PyTorch — no external LLM libraries, no API calls, no shortcuts. Then I deployed it as a fully 
+    operational, serverless AWS production system with everything a real-world ML service needs: containerised inference via Lambda, API Gateway integration, 
+    Terraform infrastructure-as-code, GitLab CI/CD pipelines, and automated monitoring.
+    But building the model and deploying it isn't where this project stops. The live Streamlit application provides interactive real-time model inference, 
+    explainability visualisations showing how the model makes decisions, system health monitoring, event and error logging, and live service cost analysis with forecasting — 
+    the kind of operational visibility that most production ML systems lack.
+    The focus was never on building the best language model. It was on demonstrating the full research-to-production lifecycle using the same tooling and patterns used by 
+    real ML engineering teams — because a model that doesn't ship is a model that doesn't matter.
         
        **What this demonstrates:**
     - **Production deployment** — containerised PyTorch model on AWS Lambda behind API Gateway
